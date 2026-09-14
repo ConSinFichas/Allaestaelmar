@@ -2,24 +2,97 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Con Sin Fichas - Arcade</title>
     <style>
-        body { background: #111; color: #fff; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-        .card { border: 2px solid #00ffcc; padding: 20px; border-radius: 10px; text-align: center; max-width: 400px; box-shadow: 0 0 15px #00ffcc55; }
-        h1 { color: #00ffcc; margin-bottom: 10px; }
-        p { color: #ccc; }
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+        body { background: #0a0a0f; color: #fff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
+        .gb-shell { background: #8b0000; width: 360px; height: 680px; border-radius: 20px 20px 50px 20px; padding: 20px; box-shadow: 0 0 30px rgba(255,0,0,0.3), inset -5px -5px 15px rgba(0,0,0,0.6); display: flex; flex-direction: column; align-items: center; position: relative; border: 4px solid #550000; }
+        .gb-screen-frame { background: #222; width: 100%; height: 320px; border-radius: 10px 10px 30px 10px; padding: 15px; display: flex; flex-direction: column; align-items: center; box-shadow: inset 3px 3px 10px #000; position: relative; }
+        .gb-screen { background: #0f1410; width: 100%; height: 100%; border-radius: 5px; border: 2px solid #333; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        canvas { background: #0f1410; width: 100%; height: 100%; display: block; }
+        .crt-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); background-size: 100% 4px; pointer-events: none; }
+        .controls { width: 100%; margin-top: 25px; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
+        .dpad { width: 120px; height: 120px; position: relative; }
+        .dbtn { position: absolute; background: #333; border: 2px solid #111; box-shadow: 2px 2px 0 #000; }
+        .dbtn:active { background: #555; }
+        .d-up { top: 0; left: 40px; width: 40px; height: 45px; border-radius: 5px 5px 0 0; }
+        .d-down { bottom: 0; left: 40px; width: 40px; height: 45px; border-radius: 0 0 5px 5px; }
+        .d-left { top: 40px; left: 0; width: 45px; height: 40px; border-radius: 5px 0 0 5px; }
+        .d-right { top: 40px; right: 0; width: 45px; height: 40px; border-radius: 0 5px 5px 0; }
+        .d-center { top: 40px; left: 40px; width: 40px; height: 40px; background: #333; position: absolute; }
+        .action-btns { display: flex; gap: 15px; transform: rotate(-15deg); margin-top: 20px; }
+        .abtn { width: 55px; height: 55px; background: #a00; border-radius: 50%; border: 3px solid #500; color: #fff; font-weight: bold; font-size: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 3px 3px 0 #000; cursor: pointer; }
+        .abtn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; }
+        .brand { color: #d00000; font-weight: bold; font-size: 14px; margin-top: 15px; text-shadow: 1px 1px 0 #000; letter-spacing: 2px; }
+        .selector { margin-bottom: 10px; display: flex; gap: 5px; }
+        .s-btn { background: #222; color: #00ffcc; border: 1px solid #00ffcc; padding: 4px 8px; font-size: 10px; cursor: pointer; border-radius: 3px; }
+        .s-btn.active { background: #00ffcc; color: #000; }
     </style>
 </head>
 <body>
-    <div class="card">
-        <h1>CON SIN FICHAS</h1>
-        <p id="game-status">Cargando plataforma...</p>
+
+    <div class="selector">
+        <button class="s-btn active" onclick="loadGame('space')">1. Space</button>
+        <button class="s-btn" onclick="loadGame('galaxian')">2. Galaxian</button>
+        <button class="s-btn" onclick="loadGame('surf')">3. Surf</button>
+        <button class="s-btn" onclick="loadGame('racer')">4. Racer</button>
     </div>
+
+    <div class="gb-shell">
+        <div class="gb-screen-frame">
+            <div class="gb-screen">
+                <canvas id="arcadeCanvas" width="280" height="240"></canvas>
+                <div class="crt-overlay"></div>
+            </div>
+        </div>
+        <div class="brand">CON SIN FICHAS</div>
+        <div class="controls">
+            <div class="dpad">
+                <div class="d-center"></div>
+                <div class="dbtn d-up" id="btnUp"></div>
+                <div class="dbtn d-down" id="btnDown"></div>
+                <div class="dbtn d-left" id="btnLeft"></div>
+                <div class="dbtn d-right" id="btnRight"></div>
+            </div>
+            <div class="action-btns">
+                <div class="abtn" id="btnB">B</div>
+                <div class="abtn" id="btnA">A</div>
+            </div>
+        </div>
+    </div>
+
     <script>
+        const canvas = document.getElementById('arcadeCanvas');
+        const ctx = canvas.getContext('2d');
         const urlParams = new URLSearchParams(window.location.search);
         const cardId = urlParams.get('id') || '1';
-        document.getElementById('game-status').innerText = 'Tarjeta detectada: ID #' + cardId;
+
+        let currentGame = 'space';
+        
+        // Mapeo automático de Tarjeta a Juego
+        if (cardId === '2') currentGame = 'galaxian';
+        if (cardId === '3') currentGame = 'surf';
+        if (cardId === '4') currentGame = 'racer';
+
+        function loadGame(gameKey) {
+            currentGame = gameKey;
+            document.querySelectorAll('.s-btn').forEach(b => b.classList.remove('active'));
+            initGame();
+        }
+
+        // Bucle Principal
+        function initGame() {
+            ctx.fillStyle = '#0f1410';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ffcc';
+            ctx.font = '12px monospace';
+            ctx.fillText('CON SIN FICHAS - ID #' + cardId, 20, 30);
+            ctx.fillText('Juego Activo: ' + currentGame.toUpperCase(), 20, 60);
+            ctx.fillText('Presiona A/B o Flechas', 20, 100);
+        }
+
+        initGame();
     </script>
 </body>
 </html>
