@@ -1,0 +1,8 @@
+{
+  "cards": [
+    { "id": 1, "title": "Space Dodger", "game": "space_dodger" },
+    { "id": 2, "title": "Galaxian Disco Rock", "game": "galaxian" },
+    { "id": 3, "title": "Surf Runner", "game": "surf_runner" },
+    { "id": 4, "title": "Highway Racer", "game": "highway_racer" }
+  ]
+}

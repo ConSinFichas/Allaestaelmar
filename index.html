@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Con Sin Fichas - Arcade</title>
+    <style>
+        body { background: #111; color: #fff; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { border: 2px solid #00ffcc; padding: 20px; border-radius: 10px; text-align: center; max-width: 400px; box-shadow: 0 0 15px #00ffcc55; }
+        h1 { color: #00ffcc; margin-bottom: 10px; }
+        p { color: #ccc; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>CON SIN FICHAS</h1>
+        <p id="game-status">Cargando plataforma...</p>
+    </div>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const cardId = urlParams.get('id') || '1';
+        document.getElementById('game-status').innerText = 'Tarjeta detectada: ID #' + cardId;
+    </script>
+</body>
+</html>
