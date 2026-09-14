@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Con Sin Fichas - Arcade Retro</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body { background: #121212; color: #fff; font-family: monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 10px; }
+    .gameboy { background: #8b0000; border: 4px solid #4a0000; border-radius: 20px 20px 40px 20px; padding: 20px; width: 100%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.7); }
+    .screen-container { background: #9ea771; border: 4px solid #2d3319; border-radius: 10px; padding: 10px; position: relative; }
+    canvas { background: #9ea771; display: block; width: 100%; height: auto; border: 2px solid #2d3319; image-rendering: pixelated; }
+    .hud { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; color: #0f380f; font-size: 14px; }
+    .controls { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding: 0 10px; }
+    .dpad { display: grid; grid-template-columns: repeat(3, 35px); grid-template-rows: repeat(3, 35px); gap: 2px; }
+    .dbtn { background: #222; border: none; border-radius: 4px; cursor: pointer; }
+    .dbtn:active { background: #444; }
+    .btn-action { width: 50px; height: 50px; border-radius: 50%; border: none; background: #b81414; color: white; font-weight: bold; font-size: 16px; box-shadow: 0 4px #660000; cursor: pointer; }
+    .btn-action:active { transform: translateY(4px); box-shadow: 0 0 #660000; }
+    .btn-group { display: flex; gap: 15px; }
+    .menu { text-align: center; color: #0f380f; padding: 20px; }
+    .menu h1 { font-size: 18px; margin-bottom: 15px; }
+    .menu ul { list-style: none; padding: 0; }
+    .menu li { margin: 10px 0; }
+    .menu a { color: #0f380f; text-decoration: none; font-weight: bold; border: 2px solid #0f380f; padding: 5px 10px; display: block; border-radius: 5px; background: #8bac0f; }
+    .menu a:hover { background: #98b815; }
+  </style>
+</head>
+<body>
+
+<div class="gameboy">
+  <div class="screen-container" id="screenContainer">
+    <!-- El contenido dinamico se carga aqui -->
+  </div>
+  <div class="controls">
+    <div class="dpad">
+      <div></div><button class="dbtn" id="btnUp"></button><div></div>
+      <button class="dbtn" id="btnLeft"></button><div></div><button class="dbtn" id="btnRight"></button>
+      <div></div><button class="dbtn" id="btnDown"></button><div></div>
+    </div>
+    <div class="btn-group">
+      <button class="btn-action" id="btnB">B</button>
+      <button class="btn-action" id="btnA">A</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const urlParams = new URLSearchParams(window.location.search);
+const currentGame = urlParams.get('game');
+const container = document.getElementById('screenContainer');
+
+function renderMenu() {
+  container.innerHTML = `
+    <div class="menu">
+      <h1>CON SIN FICHAS</h1>
+      <ul>
+        <li><a href="?game=surf">1. Surf Runner</a></li>
+        <li><a href="?game=space">2. Space Dodger</a></li>
+        <li><a href="?game=highway">3. Highway Racer</a></li>
+        <li><a href="?game=galaxian">4. Galaxian Disco Rock</a></li>
+      </ul>
+    </div>
+  `;
+}
+
+if (!currentGame) {
+  renderMenu();
+} else if (currentGame === 'surf') {
+  container.innerHTML = `
+    <div class="hud">
+      <span>DIST: <span id="dist">0</span>m</span>
+      <span>HI: <span id="high">0</span>m</span>
+    </div>
+    <canvas id="game" width="320" height="180"></canvas>
+  `;
+  initSurfGame();
+} else {
+  // Placeholder para los otros juegos mientras seleccionas
+  container.innerHTML = `
+    <div class="menu">
+      <h1>Cargando ${currentGame.toUpperCase()}...</h1>
+      <p style="margin-top:20px;">Juego en desarrollo.</p>
+      <a href="?" style="margin-top:20px;">Volver al Menú</a>
+    </div>
+  `;
+}
+
+function initSurfGame() {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const distEl = document.getElementById('dist');
+  const highEl = document.getElementById('high');
+
+  let distance = 0;
+  let highScore = localStorage.getItem('surf_hi') || 0;
+  highEl.textContent = highScore;
+
+  let gameOver = false;
+  let gameSpeed = 3;
+
+  const player = {
+    x: 40, y: 120, w: 20, h: 30, vy: 0, gravity: 0.6, isJumping: false, isDucking: false, groundY: 120
+  };
+
+  let obstacles = [];
+  let spawnTimer = 0;
+
+  function jump() {
+    if (gameOver) { resetGame(); return; }
+    if (!player.isJumping) {
+      player.vy = -10;
+      player.isJumping = true;
+      player.isDucking = false;
+    }
+  }
+
+  function duck(state) {
+    if (gameOver) return;
+    if (!player.isJumping) {
+      player.isDucking = state;
+    } else if (state) {
+      player.vy += 5;
+    }
+  }
+
+  function resetGame() {
+    distance = 0;
+    gameSpeed = 3;
+    obstacles = [];
+    gameOver = false;
+    player.y = player.groundY;
+    player.vy = 0;
+    player.isJumping = false;
+    player.isDucking = false;
+    loop();
+  }
+
+  function spawnObstacle() {
+    const isHigh = Math.random() > 0.6;
+    obstacles.push({
+      x: canvas.width + 20,
+      y: isHigh ? 85 : 125,
+      w: isHigh ? 22 : 18,
+      h: isHigh ? 15 : 25,
+      type: isHigh ? '🐦' : (Math.random() > 0.5 ? '🦈' : '🪨')
+    });
+  }
+
+  function update() {
+    if (gameOver) return;
+    distance += 0.1;
+    gameSpeed = 3 + Math.floor(distance / 50) * 0.5;
+    distEl.textContent = Math.floor(distance);
+
+    player.vy += player.gravity;
+    player.y += player.vy;
+
+    if (player.y >= player.groundY) {
+      player.y = player.groundY;
+      player.vy = 0;
+      player.isJumping = false;
+    }
+
+    spawnTimer++;
+    if (spawnTimer > 90 / (gameSpeed / 3)) {
+      spawnObstacle();
+      spawnTimer = 0;
+    }
+
+    for (let i = obstacles.length - 1; i >= 0; i--) {
+      let obs = obstacles[i];
+      obs.x -= gameSpeed;
+
+      let py = player.isDucking ? player.y + 15 : player.y;
+      let ph = player.isDucking ? 15 : player.h;
+
+      if (player.x < obs.x + obs.w && player.x + player.w > obs.x && py < obs.y + obs.h && py + ph > obs.y) {
+        gameOver = true;
+        if (Math.floor(distance) > highScore) {
+          highScore = Math.floor(distance);
+          localStorage.setItem('surf_hi', highScore);
+          highEl.textContent = highScore;
+        }
+      }
+
+      if (obs.x < -30) obstacles.splice(i, 1);
+    }
+  }
+
+  function draw() {
+    ctx.fillStyle = '#9ea771';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#0f380f';
+    ctx.fillRect(0, 145, canvas.width, 35);
+
+    ctx.font = '20px serif';
+    ctx.fillText('🏄', player.x, player.isDucking ? player.y + 25 : player.y + 20);
+
+    obstacles.forEach(obs => {
+      ctx.fillText(obs.type, obs.x, obs.y + 18);
+    });
+
+    if (gameOver) {
+      ctx.fillStyle = '#0f380f';
+      ctx.fillRect(40, 50, 240, 70);
+      ctx.fillStyle = '#9ea771';
+      ctx.font = '14px monospace';
+      ctx.fillText('GAME OVER', 120, 75);
+      ctx.fillText('Presiona A para reiniciar', 65, 100);
+    }
+  }
+
+  function loop() {
+    update();
+    draw();
+    if (!gameOver) requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('keydown', e => {
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === ' ') jump();
+    if (e.key === 'ArrowDown' || e.key === 's') duck(true);
+  });
+  window.addEventListener('keyup', e => {
+    if (e.key === 'ArrowDown' || e.key === 's') duck(false);
+  });
+
+  document.getElementById('btnA').onclick = jump;
+  document.getElementById('btnB').onmousedown = () => duck(true);
+  document.getElementById('btnB').onmouseup = () => duck(false);
+
+  loop();
+}
+</script>
+</body>
+</html>
