@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Con Sin Fichas - Arcade</title>
+    <title>Con Sin Fichas - Arcade Collection</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
         body { background: #0a0a0f; color: #fff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; overflow: hidden; }
@@ -14,7 +14,7 @@
         .crt-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%); background-size: 100% 4px; pointer-events: none; }
         .controls { width: 100%; margin-top: 25px; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
         .dpad { width: 120px; height: 120px; position: relative; }
-        .dbtn { position: absolute; background: #333; border: 2px solid #111; box-shadow: 2px 2px 0 #000; }
+        .dbtn { position: absolute; background: #333; border: 2px solid #111; box-shadow: 2px 2px 0 #000; cursor: pointer; }
         .dbtn:active { background: #555; }
         .d-up { top: 0; left: 40px; width: 40px; height: 45px; border-radius: 5px 5px 0 0; }
         .d-down { bottom: 0; left: 40px; width: 40px; height: 45px; border-radius: 0 0 5px 5px; }
@@ -33,10 +33,10 @@
 <body>
 
     <div class="selector">
-        <button class="s-btn active" onclick="loadGame('space')">1. Space</button>
-        <button class="s-btn" onclick="loadGame('galaxian')">2. Galaxian</button>
-        <button class="s-btn" onclick="loadGame('surf')">3. Surf</button>
-        <button class="s-btn" onclick="loadGame('racer')">4. Racer</button>
+        <button class="s-btn" id="s1" onclick="switchGame('space')">1. Space</button>
+        <button class="s-btn" id="s2" onclick="switchGame('galaxian')">2. Galaxian</button>
+        <button class="s-btn" id="s3" onclick="switchGame('surf')">3. Surf</button>
+        <button class="s-btn" id="s4" onclick="switchGame('racer')">4. Racer</button>
     </div>
 
     <div class="gb-shell">
@@ -68,31 +68,328 @@
         const urlParams = new URLSearchParams(window.location.search);
         const cardId = urlParams.get('id') || '1';
 
-        let currentGame = 'space';
-        
-        // Mapeo automático de Tarjeta a Juego
-        if (cardId === '2') currentGame = 'galaxian';
-        if (cardId === '3') currentGame = 'surf';
-        if (cardId === '4') currentGame = 'racer';
+        // Sistema de Teclado y Touch Input
+        const keys = { left: false, right: false, up: false, down: false, a: false, b: false };
 
-        function loadGame(gameKey) {
-            currentGame = gameKey;
-            document.querySelectorAll('.s-btn').forEach(b => b.classList.remove('active'));
-            initGame();
+        function bindBtn(id, key) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const start = (e) => { e.preventDefault(); keys[key] = true; };
+            const end = (e) => { e.preventDefault(); keys[key] = false; };
+            el.addEventListener('mousedown', start);
+            el.addEventListener('mouseup', end);
+            el.addEventListener('touchstart', start);
+            el.addEventListener('touchend', end);
         }
 
-        // Bucle Principal
-        function initGame() {
+        bindBtn('btnLeft', 'left');
+        bindBtn('btnRight', 'right');
+        bindBtn('btnUp', 'up');
+        bindBtn('btnDown', 'down');
+        bindBtn('btnA', 'a');
+        bindBtn('btnB', 'b');
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+            if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
+            if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
+            if (e.key === ' ' || e.key === 'z') keys.a = true;
+            if (e.key === 'x') keys.b = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+            if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
+            if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
+            if (e.key === ' ' || e.key === 'z') keys.a = false;
+            if (e.key === 'x') keys.b = false;
+        });
+
+        // Estado del Juego
+        let activeGame = 'space';
+        let score = 0;
+        let gameOver = false;
+        let frame = 0;
+
+        // Entidades
+        let p = { x: 130, y: 180, w: 20, h: 20, speed: 3, vy: 0, jumping: false };
+        let bullets = [];
+        let enemies = [];
+        let items = [];
+
+        function setGameMode(mode) {
+            activeGame = mode;
+            document.querySelectorAll('.s-btn').forEach(b => b.classList.remove('active'));
+            if(mode === 'space') document.getElementById('s1').classList.add('active');
+            if(mode === 'galaxian') document.getElementById('s2').classList.add('active');
+            if(mode === 'surf') document.getElementById('s3').classList.add('active');
+            if(mode === 'racer') document.getElementById('s4').classList.add('active');
+            resetState();
+        }
+
+        function switchGame(mode) {
+            setGameMode(mode);
+        }
+
+        function resetState() {
+            score = 0;
+            gameOver = false;
+            frame = 0;
+            bullets = [];
+            enemies = [];
+            items = [];
+            p = { x: 130, y: 180, w: 20, h: 20, speed: 3, vy: 0, jumping: false };
+            if (activeGame === 'surf') { p.x = 30; p.y = 170; }
+            if (activeGame === 'racer') { p.x = 130; p.y = 180; p.speed = 0; }
+        }
+
+        // Selección Inicial por URL Parameter (?id=X)
+        if (cardId === '2') setGameMode('galaxian');
+        else if (cardId === '3') setGameMode('surf');
+        else if (cardId === '4') setGameMode('racer');
+        else setGameMode('space');
+
+        // Bucle Principal de Renderizado (60 FPS)
+        function gameLoop() {
+            frame++;
             ctx.fillStyle = '#0f1410';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (gameOver) {
+                ctx.fillStyle = '#ff0055';
+                ctx.font = '16px monospace';
+                ctx.fillText('GAME OVER', 90, 110);
+                ctx.fillStyle = '#00ffcc';
+                ctx.font = '10px monospace';
+                ctx.fillText('Presiona A para reiniciar', 65, 140);
+                if (keys.a) resetState();
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            // LÓGICA SPACE DODGER
+            if (activeGame === 'space') {
+                if (keys.left && p.x > 0) p.x -= p.speed;
+                if (keys.right && p.x < canvas.width - p.w) p.x += p.speed;
+                if (keys.up && p.y > 0) p.y -= p.speed;
+                if (keys.down && p.y < canvas.height - p.h) p.y += p.speed;
+
+                if (keys.a && frame % 10 === 0) {
+                    bullets.push({ x: p.x + 8, y: p.y, w: 4, h: 8 });
+                }
+
+                if (frame % 40 === 0) {
+                    enemies.push({ x: Math.random() * 260, y: -20, w: 18, h: 18, vy: 2 });
+                }
+
+                // Render NAVE
+                ctx.fillStyle = '#00ffcc';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+
+                // Disparos
+                ctx.fillStyle = '#ffff00';
+                bullets.forEach((b, i) => {
+                    b.y -= 5;
+                    ctx.fillRect(b.x, b.y, b.w, b.h);
+                    if (b.y < -10) bullets.splice(i, 1);
+                });
+
+                // Enemigos
+                ctx.fillStyle = '#ff0055';
+                enemies.forEach((e, i) => {
+                    e.y += e.vy;
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
+
+                    // Colisión Nave-Meteoro
+                    if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
+                        gameOver = true;
+                    }
+
+                    // Colisión Disparo-Meteoro
+                    bullets.forEach((b, bi) => {
+                        if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
+                            enemies.splice(i, 1);
+                            bullets.splice(bi, 1);
+                            score += 10;
+                        }
+                    });
+
+                    if (e.y > canvas.height + 20) enemies.splice(i, 1);
+                });
+            }
+
+            // LÓGICA GALAXIAN
+            else if (activeGame === 'galaxian') {
+                if (keys.left && p.x > 0) p.x -= p.speed;
+                if (keys.right && p.x < canvas.width - p.w) p.x += p.speed;
+
+                if (keys.a && frame % 12 === 0) {
+                    bullets.push({ x: p.x + 8, y: p.y, w: 4, h: 8 });
+                }
+
+                if (frame % 50 === 0) {
+                    enemies.push({ x: Math.random() * 240, y: -20, w: 20, h: 20, vy: 1.5 });
+                }
+
+                ctx.fillStyle = '#ff00cc';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+
+                ctx.fillStyle = '#00ffcc';
+                bullets.forEach((b, i) => {
+                    b.y -= 4;
+                    ctx.fillRect(b.x, b.y, b.w, b.h);
+                    if (b.y < -10) bullets.splice(i, 1);
+                });
+
+                ctx.fillStyle = '#ffff00';
+                enemies.forEach((e, i) => {
+                    e.y += e.vy;
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
+
+                    if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
+                        gameOver = true;
+                    }
+
+                    bullets.forEach((b, bi) => {
+                        if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
+                            enemies.splice(i, 1);
+                            bullets.splice(bi, 1);
+                            score += 15;
+                        }
+                    });
+
+                    if (e.y > canvas.height + 20) enemies.splice(i, 1);
+                });
+            }
+
+            // LÓGICA SURF RUNNER
+            else if (activeGame === 'surf') {
+                if (keys.a && !p.jumping) {
+                    p.vy = -8;
+                    p.jumping = true;
+                }
+
+                p.y += p.vy;
+                p.vy += 0.4; // Gravedad
+
+                if (p.y >= 170) {
+                    p.y = 170;
+                    p.vy = 0;
+                    p.jumping = false;
+                }
+
+                if (frame % 80 === 0) {
+                    enemies.push({ x: 280, y: 175, w: 15, h: 15 });
+                }
+
+                // Agua
+                ctx.fillStyle = '#0055ff';
+                ctx.fillRect(0, 185, 280, 55);
+
+                // Surfista
+                ctx.fillStyle = '#ffff00';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+
+                // Tiburones / Obstáculos
+                ctx.fillStyle = '#ff0000';
+                enemies.forEach((e, i) => {
+                    e.x -= 3;
+                    ctx.fillRect(e.x, e.y, e.w, e.h);
+
+                    if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
+                        gameOver = true;
+                    }
+
+                    if (e.x < -20) {
+                        enemies.splice(i, 1);
+                        score += 5;
+                    }
+                });
+            }
+
+            // LÓGICA HIGHWAY RACER (Max 45 km/h, Baches y Potholes)
+            else if (activeGame === 'racer') {
+                if (keys.up || keys.a) {
+                    if (p.speed < 3) p.speed += 0.05; // Cap ~45 km/h
+                } else if (keys.down || keys.b) {
+                    if (p.speed > 0) p.speed -= 0.1;
+                } else {
+                    if (p.speed > 0) p.speed -= 0.02; // Desaceleración
+                }
+                if (p.speed < 0) p.speed = 0;
+
+                // Controles de dirección precisos (sin atascarse)
+                if (keys.left && p.x > 45) p.x -= 2.5;
+                if (keys.right && p.x < 215) p.x += 2.5;
+
+                // Dibujar Carretera
+                ctx.fillStyle = '#333';
+                ctx.fillRect(40, 0, 200, 240);
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(40, 0, 4, 240);
+                ctx.fillRect(236, 0, 4, 240);
+
+                // Línea discontinua
+                ctx.fillStyle = '#ffff00';
+                let lineOffset = (frame * p.speed * 4) % 40;
+                for (let y = -40; y < 240; y += 40) {
+                    ctx.fillRect(138, y + lineOffset, 4, 20);
+                }
+
+                // Generar Tráfico / Baches (Máximo 2 simultáneos)
+                if (frame % 90 === 0 && enemies.length < 2) {
+                    let isPothole = Math.random() > 0.5;
+                    enemies.push({
+                        x: 55 + Math.random() * 150,
+                        y: -30,
+                        w: isPothole ? 16 : 20,
+                        h: isPothole ? 10 : 25,
+                        type: isPothole ? 'pothole' : 'car'
+                    });
+                }
+
+                // Auto Jugador
+                ctx.fillStyle = '#00ffcc';
+                ctx.fillRect(p.x, p.y, p.w, p.h);
+
+                // Obstáculos
+                enemies.forEach((e, i) => {
+                    e.y += (e.type === 'pothole' ? 1 : 0.5) + p.speed;
+
+                    if (e.type === 'pothole') {
+                        ctx.fillStyle = '#000'; // Baches (🕳️)
+                        ctx.beginPath();
+                        ctx.ellipse(e.x + 8, e.y + 5, 8, 5, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else {
+                        ctx.fillStyle = '#ff0055'; // Autos
+                        ctx.fillRect(e.x, e.y, e.w, e.h);
+                    }
+
+                    // Colisión
+                    if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
+                        gameOver = true;
+                    }
+
+                    if (e.y > canvas.height + 30) {
+                        enemies.splice(i, 1);
+                        score += 10;
+                    }
+                });
+            }
+
+            // HUD
             ctx.fillStyle = '#00ffcc';
-            ctx.font = '12px monospace';
-            ctx.fillText('CON SIN FICHAS - ID #' + cardId, 20, 30);
-            ctx.fillText('Juego Activo: ' + currentGame.toUpperCase(), 20, 60);
-            ctx.fillText('Presiona A/B o Flechas', 20, 100);
+            ctx.font = '10px monospace';
+            ctx.fillText('SCORE: ' + score, 10, 15);
+            ctx.fillText('CARD: #' + cardId, 210, 15);
+
+            requestAnimationFrame(gameLoop);
         }
 
-        initGame();
+        gameLoop();
     </script>
 </body>
 </html>
