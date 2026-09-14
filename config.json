@@ -1,8 +1,14 @@
 {
-  "cards": [
-    { "id": 1, "title": "Space Dodger", "game": "space_dodger" },
-    { "id": 2, "title": "Galaxian Disco Rock", "game": "galaxian" },
-    { "id": 3, "title": "Surf Runner", "game": "surf_runner" },
-    { "id": 4, "title": "Highway Racer", "game": "highway_racer" }
-  ]
+  "default": {
+    "title": "Canción 1 - Con Sin Fichas",
+    "audioPath": "audios/cancion1.mp3"
+  },
+  "autos": {
+    "title": "Pista 1 - Carrera sin fin",
+    "audioPath": "audios/cancion1.mp3"
+  },
+  "space": {
+    "title": "Pista 2 - Espacio Profundo",
+    "audioPath": "audios/cancion2.mp3"
+  }
 }
