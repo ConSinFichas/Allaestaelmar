@@ -68,13 +68,37 @@
         const urlParams = new URLSearchParams(window.location.search);
         const cardId = urlParams.get('id') || '1';
 
-        // Sistema de Teclado y Touch Input
+        // Sistema de Sonido Web Audio API Sintetizado
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+        }
+
+        function playSound(freq, type = 'square', duration = 0.1) {
+            if (!audioCtx) return;
+            try {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e){}
+        }
+
+        // Sistema de Teclado y Touch
         const keys = { left: false, right: false, up: false, down: false, a: false, b: false };
 
         function bindBtn(id, key) {
             const el = document.getElementById(id);
             if (!el) return;
-            const start = (e) => { e.preventDefault(); keys[key] = true; };
+            const start = (e) => { e.preventDefault(); initAudio(); keys[key] = true; };
             const end = (e) => { e.preventDefault(); keys[key] = false; };
             el.addEventListener('mousedown', start);
             el.addEventListener('mouseup', end);
@@ -90,6 +114,7 @@
         bindBtn('btnB', 'b');
 
         window.addEventListener('keydown', (e) => {
+            initAudio();
             if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
             if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
             if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
@@ -107,14 +132,14 @@
             if (e.key === 'x') keys.b = false;
         });
 
-        // Estado del Juego
+        // Variables Globales de Juego
         let activeGame = 'space';
         let score = 0;
+        let fuel = 100;
         let gameOver = false;
         let frame = 0;
 
-        // Entidades
-        let p = { x: 130, y: 180, w: 20, h: 20, speed: 3, vy: 0, jumping: false };
+        let p = { x: 130, y: 180, w: 20, h: 20, speed: 0, vy: 0, jumping: false, ducking: false };
         let bullets = [];
         let enemies = [];
         let items = [];
@@ -129,29 +154,35 @@
             resetState();
         }
 
-        function switchGame(mode) {
-            setGameMode(mode);
-        }
+        function switchGame(mode) { setGameMode(mode); }
 
         function resetState() {
             score = 0;
+            fuel = 100;
             gameOver = false;
             frame = 0;
             bullets = [];
             enemies = [];
             items = [];
-            p = { x: 130, y: 180, w: 20, h: 20, speed: 3, vy: 0, jumping: false };
-            if (activeGame === 'surf') { p.x = 30; p.y = 170; }
-            if (activeGame === 'racer') { p.x = 130; p.y = 180; p.speed = 0; }
+            p = { x: 130, y: 180, w: 22, h: 22, speed: 0, vy: 0, jumping: false, ducking: false };
+            if (activeGame === 'surf') { p.x = 40; p.y = 170; p.w = 25; p.h = 18; }
+            if (activeGame === 'racer') { p.x = 130; p.y = 180; p.w = 18; p.h = 30; }
         }
 
-        // Selección Inicial por URL Parameter (?id=X)
         if (cardId === '2') setGameMode('galaxian');
         else if (cardId === '3') setGameMode('surf');
         else if (cardId === '4') setGameMode('racer');
         else setGameMode('space');
 
-        // Bucle Principal de Renderizado (60 FPS)
+        // Renderizado de Emojis / Sprites Detallados
+        function drawSprite(symbol, x, y, size = 20) {
+            ctx.font = `${size}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(symbol, x + size/2, y + size/2);
+        }
+
+        // Bucle Principal
         function gameLoop() {
             frame++;
             ctx.fillStyle = '#0f1410';
@@ -159,232 +190,284 @@
 
             if (gameOver) {
                 ctx.fillStyle = '#ff0055';
-                ctx.font = '16px monospace';
-                ctx.fillText('GAME OVER', 90, 110);
+                ctx.font = 'bold 16px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', 140, 110);
                 ctx.fillStyle = '#00ffcc';
                 ctx.font = '10px monospace';
-                ctx.fillText('Presiona A para reiniciar', 65, 140);
+                ctx.fillText('Presiona A para reiniciar', 140, 140);
                 if (keys.a) resetState();
                 requestAnimationFrame(gameLoop);
                 return;
             }
 
-            // LÓGICA SPACE DODGER
+            // 1. SPACE DODGER (Nave, Meteoros y Fichas)
             if (activeGame === 'space') {
-                if (keys.left && p.x > 0) p.x -= p.speed;
-                if (keys.right && p.x < canvas.width - p.w) p.x += p.speed;
-                if (keys.up && p.y > 0) p.y -= p.speed;
-                if (keys.down && p.y < canvas.height - p.h) p.y += p.speed;
+                if (keys.left && p.x > 5) p.x -= 3;
+                if (keys.right && p.x < canvas.width - 25) p.x += 3;
+                if (keys.up && p.y > 20) p.y -= 3;
+                if (keys.down && p.y < canvas.height - 25) p.y += 3;
 
                 if (keys.a && frame % 10 === 0) {
                     bullets.push({ x: p.x + 8, y: p.y, w: 4, h: 8 });
+                    playSound(600, 'square', 0.05);
                 }
 
-                if (frame % 40 === 0) {
-                    enemies.push({ x: Math.random() * 260, y: -20, w: 18, h: 18, vy: 2 });
+                if (frame % 35 === 0) {
+                    let isItem = Math.random() < 0.3;
+                    if(isItem) items.push({ x: 10 + Math.random() * 240, y: -20, symbol: '🪙' });
+                    else enemies.push({ x: 10 + Math.random() * 240, y: -20, vy: 2, symbol: '☄️' });
                 }
 
-                // Render NAVE
-                ctx.fillStyle = '#00ffcc';
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Nave
+                drawSprite('🚀', p.x, p.y, 22);
 
                 // Disparos
-                ctx.fillStyle = '#ffff00';
-                bullets.forEach((b, i) => {
-                    b.y -= 5;
+                ctx.fillStyle = '#00ffcc';
+                bullets.forEach((b, bi) => {
+                    b.y -= 6;
                     ctx.fillRect(b.x, b.y, b.w, b.h);
-                    if (b.y < -10) bullets.splice(i, 1);
+                    if (b.y < -10) bullets.splice(bi, 1);
                 });
 
-                // Enemigos
-                ctx.fillStyle = '#ff0055';
-                enemies.forEach((e, i) => {
-                    e.y += e.vy;
-                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                // Items (Fichas)
+                items.forEach((it, ii) => {
+                    it.y += 1.5;
+                    drawSprite(it.symbol, it.x, it.y, 18);
+                    if (Math.hypot(p.x - it.x, p.y - it.y) < 20) {
+                        items.splice(ii, 1);
+                        score += 20;
+                        playSound(880, 'sine', 0.1);
+                    }
+                    if (it.y > 250) items.splice(ii, 1);
+                });
 
-                    // Colisión Nave-Meteoro
-                    if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
+                // Meteoros
+                enemies.forEach((e, ei) => {
+                    e.y += e.vy;
+                    drawSprite(e.symbol, e.x, e.y, 22);
+
+                    if (Math.hypot(p.x - e.x, p.y - e.y) < 18) {
                         gameOver = true;
+                        playSound(150, 'sawtooth', 0.3);
                     }
 
-                    // Colisión Disparo-Meteoro
                     bullets.forEach((b, bi) => {
-                        if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
-                            enemies.splice(i, 1);
+                        if (Math.hypot(b.x - e.x, b.y - e.y) < 18) {
+                            enemies.splice(ei, 1);
                             bullets.splice(bi, 1);
                             score += 10;
+                            playSound(300, 'square', 0.08);
                         }
                     });
 
-                    if (e.y > canvas.height + 20) enemies.splice(i, 1);
+                    if (e.y > 250) enemies.splice(ei, 1);
                 });
             }
 
-            // LÓGICA GALAXIAN
+            // 2. GALAXIAN DISCO ROCK (Bailarín, Notas y Bolas de Disco)
             else if (activeGame === 'galaxian') {
-                if (keys.left && p.x > 0) p.x -= p.speed;
-                if (keys.right && p.x < canvas.width - p.w) p.x += p.speed;
+                if (keys.left && p.x > 5) p.x -= 3;
+                if (keys.right && p.x < canvas.width - 25) p.x += 3;
 
                 if (keys.a && frame % 12 === 0) {
-                    bullets.push({ x: p.x + 8, y: p.y, w: 4, h: 8 });
+                    bullets.push({ x: p.x + 6, y: p.y, symbol: '🎶' });
+                    playSound(523, 'sine', 0.08);
                 }
 
-                if (frame % 50 === 0) {
-                    enemies.push({ x: Math.random() * 240, y: -20, w: 20, h: 20, vy: 1.5 });
+                if (frame % 45 === 0) {
+                    enemies.push({ x: 10 + Math.random() * 240, y: -20, vy: 1.5, symbol: '🪩' });
                 }
 
-                ctx.fillStyle = '#ff00cc';
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                // Jugador
+                drawSprite('🕺', p.x, p.y, 24);
 
-                ctx.fillStyle = '#00ffcc';
-                bullets.forEach((b, i) => {
-                    b.y -= 4;
-                    ctx.fillRect(b.x, b.y, b.w, b.h);
-                    if (b.y < -10) bullets.splice(i, 1);
+                // Notas
+                bullets.forEach((b, bi) => {
+                    b.y -= 5;
+                    drawSprite(b.symbol, b.x, b.y, 14);
+                    if (b.y < -10) bullets.splice(bi, 1);
                 });
 
-                ctx.fillStyle = '#ffff00';
-                enemies.forEach((e, i) => {
+                // Bolas de disco
+                enemies.forEach((e, ei) => {
                     e.y += e.vy;
-                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                    drawSprite(e.symbol, e.x, e.y, 22);
 
-                    if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
+                    if (Math.hypot(p.x - e.x, p.y - e.y) < 18) {
                         gameOver = true;
+                        playSound(120, 'sawtooth', 0.3);
                     }
 
                     bullets.forEach((b, bi) => {
-                        if (b.x < e.x + e.w && b.x + b.w > e.x && b.y < e.y + e.h && b.y + b.h > e.y) {
-                            enemies.splice(i, 1);
+                        if (Math.hypot(b.x - e.x, b.y - e.y) < 18) {
+                            enemies.splice(ei, 1);
                             bullets.splice(bi, 1);
                             score += 15;
+                            playSound(784, 'triangle', 0.1);
                         }
                     });
 
-                    if (e.y > canvas.height + 20) enemies.splice(i, 1);
+                    if (e.y > 250) enemies.splice(ei, 1);
                 });
             }
 
-            // LÓGICA SURF RUNNER
+            // 3. SURF RUNNER (Surfista, Olas, Tiburones, Arrecifes y Gaviotas)
             else if (activeGame === 'surf') {
-                if (keys.a && !p.jumping) {
-                    p.vy = -8;
+                p.ducking = keys.down || keys.b;
+
+                if ((keys.a || keys.up) && !p.jumping) {
+                    p.vy = -7.5;
                     p.jumping = true;
+                    playSound(400, 'square', 0.1);
                 }
 
                 p.y += p.vy;
-                p.vy += 0.4; // Gravedad
+                p.vy += 0.45; // Gravedad
 
-                if (p.y >= 170) {
-                    p.y = 170;
+                if (p.y >= 165) {
+                    p.y = 165;
                     p.vy = 0;
                     p.jumping = false;
                 }
 
-                if (frame % 80 === 0) {
-                    enemies.push({ x: 280, y: 175, w: 15, h: 15 });
+                // Generación de Obstáculos
+                if (frame % 75 === 0) {
+                    let r = Math.random();
+                    if(r < 0.4) enemies.push({ x: 280, y: 168, symbol: '🦈', high: false });
+                    else if(r < 0.7) enemies.push({ x: 280, y: 168, symbol: '🪨', high: false });
+                    else enemies.push({ x: 280, y: 135, symbol: '🐦', high: true });
                 }
 
-                // Agua
-                ctx.fillStyle = '#0055ff';
+                // Océano
+                ctx.fillStyle = '#0044cc';
                 ctx.fillRect(0, 185, 280, 55);
+                ctx.fillStyle = '#00aaff';
+                let waveOffset = (frame * 2) % 20;
+                for(let wx = -20; wx < 300; wx += 20) {
+                    ctx.beginPath();
+                    ctx.arc(wx + waveOffset, 185, 10, 0, Math.PI);
+                    ctx.fill();
+                }
 
                 // Surfista
-                ctx.fillStyle = '#ffff00';
-                ctx.fillRect(p.x, p.y, p.w, p.h);
+                drawSprite(p.ducking ? '🏄‍♂️' : '🏄', p.x, p.ducking ? p.y + 8 : p.y, 24);
 
-                // Tiburones / Obstáculos
-                ctx.fillStyle = '#ff0000';
-                enemies.forEach((e, i) => {
+                // Obstáculos
+                enemies.forEach((e, ei) => {
                     e.x -= 3;
-                    ctx.fillRect(e.x, e.y, e.w, e.h);
+                    drawSprite(e.symbol, e.x, e.y, 20);
 
-                    if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
+                    // Colisión ajustada según agachado / salto
+                    let hit = false;
+                    if (!e.high && Math.hypot(p.x - e.x, p.y - e.y) < 18) hit = true;
+                    if (e.high && !p.ducking && Math.hypot(p.x - e.x, p.y - e.y) < 18) hit = true;
+
+                    if (hit) {
                         gameOver = true;
+                        playSound(100, 'sawtooth', 0.3);
                     }
 
                     if (e.x < -20) {
-                        enemies.splice(i, 1);
-                        score += 5;
-                    }
-                });
-            }
-
-            // LÓGICA HIGHWAY RACER (Max 45 km/h, Baches y Potholes)
-            else if (activeGame === 'racer') {
-                if (keys.up || keys.a) {
-                    if (p.speed < 3) p.speed += 0.05; // Cap ~45 km/h
-                } else if (keys.down || keys.b) {
-                    if (p.speed > 0) p.speed -= 0.1;
-                } else {
-                    if (p.speed > 0) p.speed -= 0.02; // Desaceleración
-                }
-                if (p.speed < 0) p.speed = 0;
-
-                // Controles de dirección precisos (sin atascarse)
-                if (keys.left && p.x > 45) p.x -= 2.5;
-                if (keys.right && p.x < 215) p.x += 2.5;
-
-                // Dibujar Carretera
-                ctx.fillStyle = '#333';
-                ctx.fillRect(40, 0, 200, 240);
-                ctx.fillStyle = '#fff';
-                ctx.fillRect(40, 0, 4, 240);
-                ctx.fillRect(236, 0, 4, 240);
-
-                // Línea discontinua
-                ctx.fillStyle = '#ffff00';
-                let lineOffset = (frame * p.speed * 4) % 40;
-                for (let y = -40; y < 240; y += 40) {
-                    ctx.fillRect(138, y + lineOffset, 4, 20);
-                }
-
-                // Generar Tráfico / Baches (Máximo 2 simultáneos)
-                if (frame % 90 === 0 && enemies.length < 2) {
-                    let isPothole = Math.random() > 0.5;
-                    enemies.push({
-                        x: 55 + Math.random() * 150,
-                        y: -30,
-                        w: isPothole ? 16 : 20,
-                        h: isPothole ? 10 : 25,
-                        type: isPothole ? 'pothole' : 'car'
-                    });
-                }
-
-                // Auto Jugador
-                ctx.fillStyle = '#00ffcc';
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-
-                // Obstáculos
-                enemies.forEach((e, i) => {
-                    e.y += (e.type === 'pothole' ? 1 : 0.5) + p.speed;
-
-                    if (e.type === 'pothole') {
-                        ctx.fillStyle = '#000'; // Baches (🕳️)
-                        ctx.beginPath();
-                        ctx.ellipse(e.x + 8, e.y + 5, 8, 5, 0, 0, Math.PI * 2);
-                        ctx.fill();
-                    } else {
-                        ctx.fillStyle = '#ff0055'; // Autos
-                        ctx.fillRect(e.x, e.y, e.w, e.h);
-                    }
-
-                    // Colisión
-                    if (p.x < e.x + e.w && p.x + p.w > e.x && p.y < e.y + e.h && p.y + p.h > e.y) {
-                        gameOver = true;
-                    }
-
-                    if (e.y > canvas.height + 30) {
-                        enemies.splice(i, 1);
+                        enemies.splice(ei, 1);
                         score += 10;
                     }
                 });
             }
 
-            // HUD
+            // 4. HIGHWAY RACER (Autos, Baches 🕳️, Bidones ⛽, Fichas 🪙 y Límite 45 km/h)
+            else if (activeGame === 'racer') {
+                if (keys.up || keys.a) {
+                    if (p.speed < 2.5) p.speed += 0.04; // Max ~45 km/h
+                } else if (keys.down || keys.b) {
+                    if (p.speed > 0) p.speed -= 0.08;
+                } else {
+                    if (p.speed > 0) p.speed -= 0.015;
+                }
+                if (p.speed < 0) p.speed = 0;
+
+                // Dirección suave dentro del asfalto
+                if (keys.left && p.x > 55) p.x -= 2.2;
+                if (keys.right && p.x < 205) p.x += 2.2;
+
+                // Asfalto
+                ctx.fillStyle = '#222';
+                ctx.fillRect(50, 0, 180, 240);
+                ctx.fillStyle = '#ffcc00';
+                ctx.fillRect(48, 0, 3, 240);
+                ctx.fillRect(229, 0, 3, 240);
+
+                // Línea discontinua
+                ctx.fillStyle = '#fff';
+                let lineOffset = (frame * p.speed * 4) % 40;
+                for (let y = -40; y < 240; y += 40) {
+                    ctx.fillRect(138, y + lineOffset, 4, 20);
+                }
+
+                // Spawn bajo tráfico y baches
+                if (frame % 85 === 0 && enemies.length < 2) {
+                    let r = Math.random();
+                    if(r < 0.4) enemies.push({ x: 65 + Math.random() * 130, y: -30, symbol: '🚘', type: 'car' });
+                    else if(r < 0.7) enemies.push({ x: 65 + Math.random() * 130, y: -30, symbol: '🕳️', type: 'pothole' });
+                    else items.push({ x: 65 + Math.random() * 130, y: -30, symbol: Math.random() < 0.5 ? '⛽' : '🪙' });
+                }
+
+                // Auto del Jugador
+                drawSprite('🏎️', p.x, p.y, 24);
+
+                // Items (Combustible / Fichas)
+                items.forEach((it, ii) => {
+                    it.y += 1 + p.speed;
+                    drawSprite(it.symbol, it.x, it.y, 18);
+                    if (Math.hypot(p.x - it.x, p.y - it.y) < 18) {
+                        items.splice(ii, 1);
+                        if(it.symbol === '⛽') fuel = Math.min(100, fuel + 25);
+                        else score += 30;
+                        playSound(659, 'sine', 0.1);
+                    }
+                    if (it.y > 250) items.splice(ii, 1);
+                });
+
+                // Obstáculos
+                enemies.forEach((e, ei) => {
+                    e.y += (e.type === 'pothole' ? 1 : 0.4) + p.speed;
+                    drawSprite(e.symbol, e.x, e.y, 22);
+
+                    if (Math.hypot(p.x - e.x, p.y - e.y) < 18) {
+                        if (e.type === 'pothole') {
+                            enemies.splice(ei, 1);
+                            fuel -= 20;
+                            p.speed *= 0.5;
+                            playSound(120, 'square', 0.2);
+                        } else {
+                            gameOver = true;
+                            playSound(90, 'sawtooth', 0.4);
+                        }
+                    }
+
+                    if (e.y > 250) {
+                        enemies.splice(ei, 1);
+                        score += 5;
+                    }
+                });
+
+                // Consumo de Combustible
+                if (p.speed > 0 && frame % 30 === 0) fuel -= 0.5;
+                if (fuel <= 0) gameOver = true;
+            }
+
+            // HUD Principal
             ctx.fillStyle = '#00ffcc';
             ctx.font = '10px monospace';
-            ctx.fillText('SCORE: ' + score, 10, 15);
-            ctx.fillText('CARD: #' + cardId, 210, 15);
+            ctx.textAlign = 'left';
+            ctx.fillText('SCORE:' + score, 8, 15);
+            if (activeGame === 'racer') {
+                let speedKmh = Math.round(p.speed * 18);
+                ctx.fillText(`${speedKmh}KM/H`, 115, 15);
+                ctx.fillText(`GAS:${Math.round(fuel)}%`, 210, 15);
+            } else {
+                ctx.fillText('CARD:#' + cardId, 210, 15);
+            }
 
             requestAnimationFrame(gameLoop);
         }
