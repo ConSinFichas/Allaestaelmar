@@ -3,176 +3,572 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Con Sin Fichas - Arcade</title>
+  <title>Con Sin Fichas - Surf Runner</title>
   <style>
-    * { box-sizing: border-box; touch-action: manipulation; }
+    :root {
+      --chasis-color: #031e2e;
+      --borde-color: #00f2fe;
+      --fondo-canvas: #020b14;
+      --texto-color: #ffffff;
+      --neon-yellow: #ffee00;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
-      margin: 0; padding: 10px; background: #121212; color: #fff;
-      font-family: monospace; display: flex; justify-content: center; align-items: center; min-height: 100vh;
+      background-color: #010810;
+      color: var(--texto-color);
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 10px;
     }
+
+    /* Chasis GameBoy Océano */
     .gameboy-casing {
-      width: 100%; max-width: 360px; background: #2b2b2b; border-radius: 20px;
-      padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.8), inset 0 2px 4px rgba(255,255,255,0.1);
-      border: 2px solid #3d3d3d; display: flex; flex-direction: column; gap: 12px;
+      width: 100%;
+      max-width: 360px;
+      border: 3px solid var(--borde-color);
+      border-radius: 16px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: var(--chasis-color);
+      box-shadow: 0 0 20px rgba(0, 242, 254, 0.3), inset 0 0 10px rgba(0, 0, 0, 0.8);
     }
+
     .player-section {
-      background: #1e1e1e; padding: 10px; border-radius: 10px; border: 1px solid #333; text-align: center;
+      width: 100%;
+      margin-bottom: 10px;
+      text-align: center;
     }
-    .track-title { font-size: 11px; color: #00ffcc; margin-bottom: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    audio { width: 100%; height: 32px; outline: none; }
-    
+
+    .song-title {
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: var(--borde-color);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 5px var(--borde-color);
+    }
+
+    audio {
+      width: 100%;
+      height: 32px;
+      filter: invert(1) hue-rotate(140deg);
+    }
+
     .screen-frame {
-      background: #000; border-radius: 8px; padding: 8px; border: 3px solid #111;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.9); text-align: center; position: relative;
+      width: 100%;
+      border: 2px solid var(--borde-color);
+      border-radius: 6px;
+      background-color: var(--fondo-canvas);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      box-shadow: inset 0 0 15px rgba(0, 242, 254, 0.2);
     }
-    canvas { background: #050505; border-radius: 4px; width: 100%; height: auto; display: block; image-rendering: pixelated; }
-    
-    .brand { text-align: center; font-weight: bold; font-size: 14px; letter-spacing: 2px; color: #888; text-transform: uppercase; }
-    
-    .controls-section { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; }
-    
-    /* D-Pad Layout */
-    .dpad { display: grid; grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 2px; }
-    .btn-pad { background: #444; border: 1px solid #222; border-radius: 4px; box-shadow: 0 3px 0 #111; color: #aaa; font-weight: bold; display: flex; justify-content: center; align-items: center; user-select: none; }
-    .btn-pad:active { background: #222; transform: translateY(2px); box-shadow: 0 1px 0 #111; }
-    .dpad .up { grid-column: 2; grid-row: 1; }
-    .dpad .left { grid-column: 1; grid-row: 2; }
-    .dpad .right { grid-column: 3; grid-row: 2; }
-    .dpad .down { grid-column: 2; grid-row: 3; }
-    
-    /* Action Buttons (A/B) */
-    .action-buttons { display: flex; gap: 12px; transform: rotate(-10deg); }
-    .btn-action {
-      width: 48px; height: 48px; background: #c0392b; border: 2px solid #7f8c8d; border-radius: 50%;
-      color: #fff; font-weight: bold; font-size: 16px; box-shadow: 0 4px 0 #78281f;
-      display: flex; justify-content: center; align-items: center; user-select: none;
+
+    canvas {
+      width: 100%;
+      height: 220px;
+      display: block;
+      background-color: transparent;
     }
-    .btn-action:active { background: #922b21; transform: translateY(3px); box-shadow: 0 1px 0 #78281f; }
-    .btn-action.b { transform: translateY(10px); background: #d35400; box-shadow: 0 4px 0 #873600; }
+
+    .brand {
+      font-size: 1rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin: 12px 0;
+      text-align: center;
+      color: var(--neon-yellow);
+      text-shadow: 0 0 8px var(--neon-yellow);
+    }
+
+    .controls-section {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px;
+    }
+
+    /* D-Pad */
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 38px);
+      grid-template-rows: repeat(3, 38px);
+    }
+
+    .dpad-btn {
+      background: #011422;
+      border: 2px solid var(--borde-color);
+      color: var(--borde-color);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+      box-shadow: 0 0 5px rgba(0, 242, 254, 0.3);
+      cursor: pointer;
+    }
+
+    .dpad-btn:active {
+      background: var(--borde-color);
+      color: #000000;
+    }
+
+    .up { grid-column: 2; grid-row: 1; border-radius: 4px 4px 0 0; }
+    .left { grid-column: 1; grid-row: 2; border-radius: 4px 0 0 4px; }
+    .center { grid-column: 2; grid-row: 2; background: #000; border: none; }
+    .right { grid-column: 3; grid-row: 2; border-radius: 0 4px 4px 0; }
+    .down { grid-column: 2; grid-row: 3; border-radius: 0 0 4px 4px; }
+
+    /* Botones A / B */
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn-round {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: #011422;
+      border: 2px solid var(--borde-color);
+      color: var(--borde-color);
+      font-size: 1rem;
+      font-weight: bold;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+      box-shadow: 0 0 8px rgba(0, 242, 254, 0.4);
+      cursor: pointer;
+    }
+
+    .btn-round:active {
+      background: var(--borde-color);
+      color: #000000;
+    }
+
+    .btn-a { margin-top: -15px; }
+    .btn-b { margin-top: 10px; }
   </style>
 </head>
 <body>
 
-<div class="gameboy-casing">
-  <!-- Reproductor e Info -->
-  <div class="player-section">
-    <div id="trackTitle" class="track-title">Cargando canción...</div>
-    <audio id="audioPlayer" controls src=""></audio>
-  </div>
-
-  <!-- Pantalla del Juego -->
-  <div class="screen-frame">
-    <canvas id="gameCanvas" width="320" height="220"></canvas>
-  </div>
-
-  <div class="brand">CON SIN FICHAS</div>
-
-  <!-- Controles -->
-  <div class="controls-section">
-    <div class="dpad">
-      <div class="btn-pad up" id="btnUp">▲</div>
-      <div class="btn-pad left" id="btnLeft">◄</div>
-      <div class="btn-pad right" id="btnRight">►</div>
-      <div class="btn-pad down" id="btnDown">▼</div>
+  <div class="gameboy-casing">
+    
+    <div class="player-section">
+      <div class="song-title" id="songTitle">🏄 SURF RUNNER 🏄‍♂️</div>
+      <audio id="audioPlayer" controls src="pista.mp3"></audio>
     </div>
-    <div class="action-buttons">
-      <div class="btn-action b" id="btnB">B</div>
-      <div class="btn-action a" id="btnA">A</div>
+
+    <div class="screen-frame">
+      <canvas id="gameCanvas" width="320" height="220"></canvas>
     </div>
+
+    <div class="brand">Con Sin Fichas</div>
+
+    <div class="controls-section">
+      <div class="dpad">
+        <button class="dpad-btn up" id="btnUp">▲</button>
+        <button class="dpad-btn left" id="btnLeft">◄</button>
+        <div class="center"></div>
+        <button class="dpad-btn right" id="btnRight">►</button>
+        <button class="dpad-btn down" id="btnDown">▼</button>
+      </div>
+
+      <div class="action-buttons">
+        <button class="btn-round btn-b" id="btnB">B</button>
+        <button class="btn-round btn-a" id="btnA">A</button>
+      </div>
+    </div>
+
   </div>
-</div>
 
-<script>
-  const canvas = document.getElementById('gameCanvas');
-  const ctx = canvas.getContext('2d');
-  const audioPlayer = document.getElementById('audioPlayer');
-  const trackTitle = document.getElementById('trackTitle');
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const audioPlayer = document.getElementById('audioPlayer');
 
-  let gameState = 'STOPPED'; // STOPPED, PLAYING, PAUSED
-  let keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, KeyA: false, KeyB: false };
+    // Estados del juego
+    let gameRunning = false;
+    let distance = 0;
+    let highScore = localStorage.getItem('surf_high_score') || 0;
+    let frameCount = 0;
+    let gameSpeed = 3.5;
 
-  // 1. Carga Dinámica desde config.json
-  async function loadConfiguration() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const gameId = urlParams.get('juego') || 'default';
+    const WATER_LEVEL = 160;
 
-    try {
-      const response = await fetch('config.json');
-      const config = await response.json();
-      const currentGameData = config[gameId] || config['default'];
+    // Surfista (🏄)
+    const surfer = {
+      x: 40,
+      y: WATER_LEVEL,
+      vy: 0,
+      gravity: 0.55,
+      jumpForce: -10.5,
+      isJumping: false,
+      isDucking: false,
+      duckTimer: 0,
+      width: 24,
+      height: 32
+    };
 
-      if (currentGameData) {
-        audioPlayer.src = currentGameData.audioPath || 'audios/cancion1.mp3';
-        trackTitle.innerText = `🎵 ${currentGameData.title || 'Con Sin Fichas'}`;
+    // Colecciones de objetos y partículas
+    let obstacles = [];
+    let foamParticles = [];
+
+    // Sintetizador Web Audio API para efectos de sonido
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       }
-    } catch (e) {
-      console.warn("No se pudo cargar config.json, usando valores por defecto.", e);
-      audioPlayer.src = 'audios/cancion1.mp3';
-      trackTitle.innerText = "🎵 Con Sin Fichas - Canción 1";
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
     }
-  }
 
-  // 2. Controladores de Audio sincrónicos con el juego
-  audioPlayer.addEventListener('play', () => { gameState = 'PLAYING'; });
-  audioPlayer.addEventListener('pause', () => { gameState = 'PAUSED'; });
-  audioPlayer.addEventListener('ended', () => { gameState = 'STOPPED'; });
+    function playSound(freq, duration, type = 'sine', slideFreq = null) {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        if (slideFreq) {
+          osc.frequency.exponentialRampToValueAtTime(slideFreq, audioCtx.currentTime + duration);
+        }
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        // Silenciar errores en caso de políticas de autostart restringidas
+      }
+    }
 
-  // 3. Mapeo de Controles (Teclado y Touch)
-  function bindTouch(elementId, keyName) {
-    const el = document.getElementById(elementId);
-    el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
-    el.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; });
-    el.addEventListener('mousedown', () => { keys[keyName] = true; });
-    el.addEventListener('mouseup', () => { keys[keyName] = false; });
-  }
+    // Acciones de juego
+    function jump() {
+      if (!gameRunning) return;
+      if (!surfer.isJumping) {
+        surfer.vy = surfer.jumpForce;
+        surfer.isJumping = true;
+        surfer.isDucking = false;
+        playSound(300, 0.15, 'square', 600);
+      }
+    }
 
-  bindTouch('btnUp', 'ArrowUp');
-  bindTouch('btnDown', 'ArrowDown');
-  bindTouch('btnLeft', 'ArrowLeft');
-  bindTouch('btnRight', 'ArrowRight');
-  bindTouch('btnA', 'KeyA');
-  bindTouch('btnB', 'KeyB');
+    function duck() {
+      if (!gameRunning) return;
+      if (surfer.isJumping) {
+        surfer.vy += 7;
+      } else {
+        surfer.isDucking = true;
+        surfer.duckTimer = 25;
+        playSound(200, 0.1, 'sawtooth', 100);
+      }
+    }
 
-  window.addEventListener('keydown', (e) => { if (keys.hasOwnProperty(e.code)) keys[e.code] = true; });
-  window.addEventListener('keyup', (e) => { if (keys.hasOwnProperty(e.code)) keys[e.code] = false; });
+    // Eventos de entrada (Táctil, Mouse, Teclado)
+    function bindAction(id, actionFn) {
+      const btn = document.getElementById(id);
+      const trigger = (e) => {
+        e.preventDefault();
+        initAudio();
+        actionFn();
+      };
+      btn.addEventListener('touchstart', trigger, { passive: false });
+      btn.addEventListener('mousedown', trigger);
+    }
 
-  // 4. Lógica y Render del Juego (Ejemplo base/demostración)
-  let player = { x: 150, y: 160, size: 20, speed: 3 };
+    bindAction('btnA', jump);
+    bindAction('btnUp', jump);
+    bindAction('btnB', duck);
+    bindAction('btnDown', duck);
 
-  function update() {
-    if (gameState !== 'PLAYING') return;
+    window.addEventListener('keydown', (e) => {
+      initAudio();
+      if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') jump();
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') duck();
+    });
 
-    if (keys.ArrowLeft && player.x > 0) player.x -= player.speed;
-    if (keys.ArrowRight && player.x < canvas.width - player.size) player.x += player.speed;
-    if (keys.ArrowUp && player.y > 0) player.y -= player.speed;
-    if (keys.ArrowDown && player.y < canvas.height - player.size) player.y += player.speed;
-  }
+    // Control de Audio/Play
+    audioPlayer.addEventListener('play', () => {
+      initAudio();
+      if (!gameRunning) {
+        resetGame();
+        gameRunning = true;
+        gameLoop();
+      }
+    });
 
-  function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    audioPlayer.addEventListener('pause', () => {
+      gameRunning = false;
+    });
 
-    if (gameState === 'STOPPED' || gameState === 'PAUSED') {
-      ctx.fillStyle = '#00ffcc';
-      ctx.font = '14px monospace';
+    function resetGame() {
+      distance = 0;
+      gameSpeed = 3.5;
+      frameCount = 0;
+      obstacles = [];
+      foamParticles = [];
+      surfer.y = WATER_LEVEL;
+      surfer.vy = 0;
+      surfer.isJumping = false;
+      surfer.isDucking = false;
+    }
+
+    // Generador de obstáculos marinos
+    function spawnObstacle() {
+      const isFlying = Math.random() < 0.35;
+      if (isFlying) {
+        obstacles.push({
+          x: canvas.width + 20,
+          y: WATER_LEVEL - 38,
+          type: '🐦',
+          isFlying: true,
+          width: 22,
+          height: 20
+        });
+      } else {
+        const seaHazards = ['🦈', '🪨', '🛟'];
+        const hazard = seaHazards[Math.floor(Math.random() * seaHazards.length)];
+        obstacles.push({
+          x: canvas.width + 20,
+          y: WATER_LEVEL - 5,
+          type: hazard,
+          isFlying: false,
+          width: 22,
+          height: 22
+        });
+      }
+    }
+
+    // Actualización del bucle
+    function update() {
+      frameCount++;
+      distance += 0.15;
+      gameSpeed = 3.5 + Math.floor(distance / 50) * 0.3;
+
+      // Física del surfista
+      if (surfer.isJumping) {
+        surfer.y += surfer.vy;
+        surfer.vy += surfer.gravity;
+
+        if (surfer.y >= WATER_LEVEL) {
+          surfer.y = WATER_LEVEL;
+          surfer.vy = 0;
+          surfer.isJumping = false;
+        }
+      }
+
+      // Contador de agachado
+      if (surfer.isDucking) {
+        surfer.duckTimer--;
+        if (surfer.duckTimer <= 0) {
+          surfer.isDucking = false;
+        }
+      }
+
+      // Estela de espuma de mar detrás de la tabla
+      if (frameCount % 3 === 0) {
+        foamParticles.push({
+          x: surfer.x - 5,
+          y: surfer.y + 10,
+          size: Math.random() * 4 + 2,
+          speed: gameSpeed * 0.8,
+          life: 15
+        });
+      }
+
+      // Actualizar partículas de espuma de forma segura
+      for (let i = foamParticles.length - 1; i >= 0; i--) {
+        const p = foamParticles[i];
+        p.x -= p.speed;
+        p.life--;
+        if (p.life <= 0) {
+          foamParticles.splice(i, 1);
+        }
+      }
+
+      // Aparición de obstáculos
+      const spawnInterval = Math.max(45, Math.floor(90 - gameSpeed * 5));
+      if (frameCount % spawnInterval === 0) {
+        spawnObstacle();
+      }
+
+      // Mover y verificar colisiones (recorrido inverso seguro)
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const obs = obstacles[i];
+        obs.x -= gameSpeed;
+
+        const surferHitbox = {
+          x: surfer.x - 10,
+          y: surfer.isDucking ? surfer.y - 12 : surfer.y - 28,
+          width: 20,
+          height: surfer.isDucking ? 14 : 28
+        };
+
+        const obstacleHitbox = {
+          x: obs.x - 10,
+          y: obs.y - 15,
+          width: obs.width,
+          height: obs.height
+        };
+
+        // Detector de colisión AABB
+        if (
+          surferHitbox.x < obstacleHitbox.x + obstacleHitbox.width &&
+          surferHitbox.x + surferHitbox.width > obstacleHitbox.x &&
+          surferHitbox.y < obstacleHitbox.y + obstacleHitbox.height &&
+          surferHitbox.y + surferHitbox.height > obstacleHitbox.y
+        ) {
+          playSound(120, 0.4, 'sawtooth', 40);
+          gameRunning = false;
+
+          if (Math.floor(distance) > highScore) {
+            highScore = Math.floor(distance);
+            localStorage.setItem('surf_high_score', highScore);
+          }
+          break;
+        }
+
+        // Eliminar fuera de pantalla
+        if (obs.x < -30) {
+          obstacles.splice(i, 1);
+        }
+      }
+    }
+
+    // Renderizado en Canvas
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Fondo - Atardecer / Mar Retro
+      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      gradient.addColorStop(0, '#020b14');
+      gradient.addColorStop(0.6, '#083344');
+      gradient.addColorStop(1, '#00f2fe');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Sol distante
+      ctx.fillStyle = '#ffee00';
+      ctx.beginPath();
+      ctx.arc(260, 60, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Línea de Mar / Olas
+      ctx.fillStyle = '#0088cc';
+      ctx.fillRect(0, WATER_LEVEL + 8, canvas.width, canvas.height - WATER_LEVEL);
+
+      ctx.strokeStyle = '#00f2fe';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, WATER_LEVEL + 8);
+      for (let x = 0; x <= canvas.width; x += 20) {
+        const waveY = Math.sin((x + frameCount * 4) * 0.05) * 3;
+        ctx.lineTo(x, WATER_LEVEL + 8 + waveY);
+      }
+      ctx.stroke();
+
+      // Partículas de espuma
+      ctx.fillStyle = '#ffffff';
+      foamParticles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // Dibujar Obstáculos
+      ctx.font = '22px sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('PRESS PLAY TO START', canvas.width / 2, canvas.height / 2);
-      return;
+      obstacles.forEach(obs => {
+        ctx.fillText(obs.type, obs.x, obs.y);
+      });
+
+      // Dibujar Surfista
+      ctx.font = '26px sans-serif';
+      ctx.textAlign = 'center';
+      
+      let surferSprite = '🏄‍♂️';
+      let renderY = surfer.y;
+
+      if (surfer.isDucking) {
+        surferSprite = '🏄';
+        renderY += 6;
+      }
+
+      ctx.fillText(surferSprite, surfer.x, renderY);
+
+      // HUD
+      ctx.fillStyle = '#00f2fe';
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`DIST: ${Math.floor(distance)}m`, 10, 20);
+
+      ctx.textAlign = 'right';
+      ctx.fillText(`HI: ${highScore}m`, canvas.width - 10, 20);
+
+      // Game Over Overlay
+      if (!gameRunning && distance > 0) {
+        ctx.fillStyle = 'rgba(2, 11, 20, 0.85)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = '#00f2fe';
+        ctx.font = '16px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText("¡CAÍSTE AL AGUA!", canvas.width / 2, canvas.height / 2 - 10);
+
+        ctx.fillStyle = '#ffee00';
+        ctx.font = '12px monospace';
+        ctx.fillText(`RECORRIDO: ${Math.floor(distance)}m`, canvas.width / 2, canvas.height / 2 + 15);
+        ctx.fillText("PRESIONA PLAY PARA VOLVER A SURFEAR", canvas.width / 2, canvas.height / 2 + 35);
+      }
     }
 
-    // Render del jugador
-    ctx.fillStyle = keys.KeyA ? '#ff0055' : '#00ffcc';
-    ctx.fillRect(player.x, player.y, player.size, player.size);
-  }
+    function drawInitialScreen() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#00f2fe';
+      ctx.font = '12px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText("DALE PLAY A LA CANCIÓN", canvas.width / 2, canvas.height / 2 - 15);
+      ctx.fillText("PARA EMPEZAR A SURFEAR", canvas.width / 2, canvas.height / 2 + 5);
 
-  function gameLoop() {
-    update();
-    render();
-    requestAnimationFrame(gameLoop);
-  }
+      ctx.fillStyle = '#ffee00';
+      ctx.fillText("BOTÓN A: SALTAR | BOTÓN B: AGACHARSE", canvas.width / 2, canvas.height / 2 + 35);
+    }
 
-  // Inicialización
-  loadConfiguration();
-  gameLoop();
-</script>
+    function gameLoop() {
+      if (!gameRunning) return;
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    drawInitialScreen();
+  </script>
 </body>
 </html>
