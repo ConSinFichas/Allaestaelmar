@@ -1,14 +1,13 @@
 {
-  "default": {
-    "title": "Canción 1 - Con Sin Fichas",
-    "audioPath": "audios/cancion1.mp3"
+  "gameTitle": "CSF - SURF RIDER",
+  "audio": {
+    "trackName": "ALLÁ ESTÁ EL MAR",
+    "file": "audios/allá está el mar.png"
   },
-  "autos": {
-    "title": "Pista 1 - Carrera sin fin",
-    "audioPath": "audios/cancion1.mp3"
-  },
-  "space": {
-    "title": "Pista 2 - Espacio Profundo",
-    "audioPath": "audios/cancion2.mp3"
+  "assets": {
+    "surfer": "images/surfer.png",
+    "coin": "images/coin.png",
+    "bird": "images/bird.png",
+    "rock": "images/rock.png"
   }
 }
