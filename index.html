@@ -179,8 +179,7 @@
     
     <div class="player-section">
       <div class="song-title" id="songTitle">🏄 SURF RUNNER 🏄‍♂️</div>
-      <!-- Nombre de archivo fijado a cancion1.mp3 -->
-      <audio id="audioPlayer" controls src="cancion1.mp3"></audio>
+      <audio id="audioPlayer" controls preload="auto" src="cancion1.mp3"></audio>
     </div>
 
     <div class="screen-frame" id="screenFrame">
@@ -265,21 +264,26 @@
       } catch (e) {}
     }
 
-    function startGame() {
+    function syncAudioAndStart() {
       initAudio();
+      
+      // Intentar reproducir el reproductor si está pausado
+      if (audioPlayer.paused) {
+        audioPlayer.play().catch(err => {
+          console.log("Esperando interacción directa:", err);
+        });
+      }
+
       if (!gameRunning) {
         resetGame();
         gameRunning = true;
-        audioPlayer.play().catch(() => {
-          console.log("Audio no disponible o bloqueado por el navegador.");
-        });
         gameLoop();
       }
     }
 
     function jump() {
       if (!gameRunning) {
-        startGame();
+        syncAudioAndStart();
         return;
       }
       if (!surfer.isJumping) {
@@ -292,7 +296,7 @@
 
     function duck() {
       if (!gameRunning) {
-        startGame();
+        syncAudioAndStart();
         return;
       }
       if (surfer.isJumping) {
@@ -320,7 +324,7 @@
     bindAction('btnDown', duck);
 
     screenFrame.addEventListener('click', () => {
-      if (!gameRunning) startGame();
+      syncAudioAndStart();
     });
 
     window.addEventListener('keydown', (e) => {
@@ -328,8 +332,13 @@
       if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') duck();
     });
 
+    // Evento clave: Cuando el usuario toca directamente el botón "PLAY" de la canción
     audioPlayer.addEventListener('play', () => {
-      if (!gameRunning) startGame();
+      if (!gameRunning) {
+        resetGame();
+        gameRunning = true;
+        gameLoop();
+      }
     });
 
     function resetGame() {
@@ -539,8 +548,8 @@
       ctx.fillStyle = '#00f2fe';
       ctx.font = '12px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText("PRESIONA EL BOTÓN A O TOCA", canvas.width / 2, canvas.height / 2 - 15);
-      ctx.fillText("LA PANTALLA PARA EMPEZAR", canvas.width / 2, canvas.height / 2 + 5);
+      ctx.fillText("DALE PLAY A LA CANCIÓN O PRESIONA A", canvas.width / 2, canvas.height / 2 - 15);
+      ctx.fillText("PARA EMPEZAR A SURFEAR", canvas.width / 2, canvas.height / 2 + 5);
 
       ctx.fillStyle = '#ffee00';
       ctx.fillText("BOTÓN A: SALTAR | BOTÓN B: AGACHARSE", canvas.width / 2, canvas.height / 2 + 35);
