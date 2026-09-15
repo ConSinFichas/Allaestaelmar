@@ -178,7 +178,7 @@
     </div>
 
     <div class="brand-title" id="brand-title-text">
-        〰️ CSF - SURF RIDER 〰️
+        〰️ Con Sin Fichas 〰️
     </div>
 
     <div id="controls-area">
@@ -217,7 +217,7 @@
     const images = {};
 
     function loadConfigAndAssets() {
-        fetch('config.json')
+        fetch('config.json?v=' + Date.now())
             .then(res => res.json())
             .then(config => {
                 gameConfig = config;
