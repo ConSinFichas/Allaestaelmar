@@ -80,6 +80,7 @@
       align-items: center;
       overflow: hidden;
       box-shadow: inset 0 0 15px rgba(0, 242, 254, 0.2);
+      cursor: pointer;
     }
 
     canvas {
@@ -178,10 +179,11 @@
     
     <div class="player-section">
       <div class="song-title" id="songTitle">🏄 SURF RUNNER 🏄‍♂️</div>
-      <audio id="audioPlayer" controls src="pista.mp3"></audio>
+      <!-- Nombre de archivo fijado a cancion1.mp3 -->
+      <audio id="audioPlayer" controls src="cancion1.mp3"></audio>
     </div>
 
-    <div class="screen-frame">
+    <div class="screen-frame" id="screenFrame">
       <canvas id="gameCanvas" width="320" height="220"></canvas>
     </div>
 
@@ -208,8 +210,8 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const audioPlayer = document.getElementById('audioPlayer');
+    const screenFrame = document.getElementById('screenFrame');
 
-    // Estados del juego
     let gameRunning = false;
     let distance = 0;
     let highScore = localStorage.getItem('surf_high_score') || 0;
@@ -218,7 +220,6 @@
 
     const WATER_LEVEL = 160;
 
-    // Surfista (🏄)
     const surfer = {
       x: 40,
       y: WATER_LEVEL,
@@ -232,11 +233,8 @@
       height: 32
     };
 
-    // Colecciones de objetos y partículas
     let obstacles = [];
     let foamParticles = [];
-
-    // Sintetizador Web Audio API para efectos de sonido
     let audioCtx = null;
 
     function initAudio() {
@@ -264,14 +262,26 @@
         gain.connect(audioCtx.destination);
         osc.start();
         osc.stop(audioCtx.currentTime + duration);
-      } catch (e) {
-        // Silenciar errores en caso de políticas de autostart restringidas
+      } catch (e) {}
+    }
+
+    function startGame() {
+      initAudio();
+      if (!gameRunning) {
+        resetGame();
+        gameRunning = true;
+        audioPlayer.play().catch(() => {
+          console.log("Audio no disponible o bloqueado por el navegador.");
+        });
+        gameLoop();
       }
     }
 
-    // Acciones de juego
     function jump() {
-      if (!gameRunning) return;
+      if (!gameRunning) {
+        startGame();
+        return;
+      }
       if (!surfer.isJumping) {
         surfer.vy = surfer.jumpForce;
         surfer.isJumping = true;
@@ -281,7 +291,10 @@
     }
 
     function duck() {
-      if (!gameRunning) return;
+      if (!gameRunning) {
+        startGame();
+        return;
+      }
       if (surfer.isJumping) {
         surfer.vy += 7;
       } else {
@@ -291,12 +304,10 @@
       }
     }
 
-    // Eventos de entrada (Táctil, Mouse, Teclado)
     function bindAction(id, actionFn) {
       const btn = document.getElementById(id);
       const trigger = (e) => {
         e.preventDefault();
-        initAudio();
         actionFn();
       };
       btn.addEventListener('touchstart', trigger, { passive: false });
@@ -308,24 +319,17 @@
     bindAction('btnB', duck);
     bindAction('btnDown', duck);
 
+    screenFrame.addEventListener('click', () => {
+      if (!gameRunning) startGame();
+    });
+
     window.addEventListener('keydown', (e) => {
-      initAudio();
       if (e.key === ' ' || e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') jump();
       if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') duck();
     });
 
-    // Control de Audio/Play
     audioPlayer.addEventListener('play', () => {
-      initAudio();
-      if (!gameRunning) {
-        resetGame();
-        gameRunning = true;
-        gameLoop();
-      }
-    });
-
-    audioPlayer.addEventListener('pause', () => {
-      gameRunning = false;
+      if (!gameRunning) startGame();
     });
 
     function resetGame() {
@@ -340,7 +344,6 @@
       surfer.isDucking = false;
     }
 
-    // Generador de obstáculos marinos
     function spawnObstacle() {
       const isFlying = Math.random() < 0.35;
       if (isFlying) {
@@ -366,13 +369,11 @@
       }
     }
 
-    // Actualización del bucle
     function update() {
       frameCount++;
       distance += 0.15;
       gameSpeed = 3.5 + Math.floor(distance / 50) * 0.3;
 
-      // Física del surfista
       if (surfer.isJumping) {
         surfer.y += surfer.vy;
         surfer.vy += surfer.gravity;
@@ -384,7 +385,6 @@
         }
       }
 
-      // Contador de agachado
       if (surfer.isDucking) {
         surfer.duckTimer--;
         if (surfer.duckTimer <= 0) {
@@ -392,7 +392,6 @@
         }
       }
 
-      // Estela de espuma de mar detrás de la tabla
       if (frameCount % 3 === 0) {
         foamParticles.push({
           x: surfer.x - 5,
@@ -403,7 +402,6 @@
         });
       }
 
-      // Actualizar partículas de espuma de forma segura
       for (let i = foamParticles.length - 1; i >= 0; i--) {
         const p = foamParticles[i];
         p.x -= p.speed;
@@ -413,13 +411,11 @@
         }
       }
 
-      // Aparición de obstáculos
       const spawnInterval = Math.max(45, Math.floor(90 - gameSpeed * 5));
       if (frameCount % spawnInterval === 0) {
         spawnObstacle();
       }
 
-      // Mover y verificar colisiones (recorrido inverso seguro)
       for (let i = obstacles.length - 1; i >= 0; i--) {
         const obs = obstacles[i];
         obs.x -= gameSpeed;
@@ -438,7 +434,6 @@
           height: obs.height
         };
 
-        // Detector de colisión AABB
         if (
           surferHitbox.x < obstacleHitbox.x + obstacleHitbox.width &&
           surferHitbox.x + surferHitbox.width > obstacleHitbox.x &&
@@ -455,18 +450,15 @@
           break;
         }
 
-        // Eliminar fuera de pantalla
         if (obs.x < -30) {
           obstacles.splice(i, 1);
         }
       }
     }
 
-    // Renderizado en Canvas
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Fondo - Atardecer / Mar Retro
       const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
       gradient.addColorStop(0, '#020b14');
       gradient.addColorStop(0.6, '#083344');
@@ -474,13 +466,11 @@
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Sol distante
       ctx.fillStyle = '#ffee00';
       ctx.beginPath();
       ctx.arc(260, 60, 20, 0, Math.PI * 2);
       ctx.fill();
 
-      // Línea de Mar / Olas
       ctx.fillStyle = '#0088cc';
       ctx.fillRect(0, WATER_LEVEL + 8, canvas.width, canvas.height - WATER_LEVEL);
 
@@ -494,7 +484,6 @@
       }
       ctx.stroke();
 
-      // Partículas de espuma
       ctx.fillStyle = '#ffffff';
       foamParticles.forEach(p => {
         ctx.beginPath();
@@ -502,14 +491,12 @@
         ctx.fill();
       });
 
-      // Dibujar Obstáculos
       ctx.font = '22px sans-serif';
       ctx.textAlign = 'center';
       obstacles.forEach(obs => {
         ctx.fillText(obs.type, obs.x, obs.y);
       });
 
-      // Dibujar Surfista
       ctx.font = '26px sans-serif';
       ctx.textAlign = 'center';
       
@@ -523,7 +510,6 @@
 
       ctx.fillText(surferSprite, surfer.x, renderY);
 
-      // HUD
       ctx.fillStyle = '#00f2fe';
       ctx.font = '12px monospace';
       ctx.textAlign = 'left';
@@ -532,7 +518,6 @@
       ctx.textAlign = 'right';
       ctx.fillText(`HI: ${highScore}m`, canvas.width - 10, 20);
 
-      // Game Over Overlay
       if (!gameRunning && distance > 0) {
         ctx.fillStyle = 'rgba(2, 11, 20, 0.85)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -545,7 +530,7 @@
         ctx.fillStyle = '#ffee00';
         ctx.font = '12px monospace';
         ctx.fillText(`RECORRIDO: ${Math.floor(distance)}m`, canvas.width / 2, canvas.height / 2 + 15);
-        ctx.fillText("PRESIONA PLAY PARA VOLVER A SURFEAR", canvas.width / 2, canvas.height / 2 + 35);
+        ctx.fillText("TOCA LA PANTALLA O BOTÓN A", canvas.width / 2, canvas.height / 2 + 35);
       }
     }
 
@@ -554,8 +539,8 @@
       ctx.fillStyle = '#00f2fe';
       ctx.font = '12px monospace';
       ctx.textAlign = 'center';
-      ctx.fillText("DALE PLAY A LA CANCIÓN", canvas.width / 2, canvas.height / 2 - 15);
-      ctx.fillText("PARA EMPEZAR A SURFEAR", canvas.width / 2, canvas.height / 2 + 5);
+      ctx.fillText("PRESIONA EL BOTÓN A O TOCA", canvas.width / 2, canvas.height / 2 - 15);
+      ctx.fillText("LA PANTALLA PARA EMPEZAR", canvas.width / 2, canvas.height / 2 + 5);
 
       ctx.fillStyle = '#ffee00';
       ctx.fillText("BOTÓN A: SALTAR | BOTÓN B: AGACHARSE", canvas.width / 2, canvas.height / 2 + 35);
