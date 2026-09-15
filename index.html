@@ -444,9 +444,6 @@
         score = 0;
         nextSpeedUpThreshold = 250;
         gameSpeed = 4.5;
-        if (audioElement) {
-            try { audioElement.currentTime = 0; } catch(e) {}
-        }
         if (gameConfig.audio) {
             document.getElementById('track-title').innerText = `${gameConfig.audio.trackName} [ ⚡ 1.0x ]`;
         }
@@ -529,7 +526,6 @@
                 surfer.y + currentH - 5 > obs.y
             ) {
                 gameOver = true;
-                stopMusicLoop();
             }
 
             if (obs.x + obs.width < 0) { obstacles.splice(i, 1); i--; }
