@@ -226,6 +226,9 @@
                 
                 audioElement = new Audio(config.audio.file);
                 audioElement.loop = true;
+                audioElement.onerror = () => {
+                    console.warn("Aviso: El archivo de audio no pudo cargarse, el juego continuará sin sonido.");
+                };
 
                 loadImages(config.assets, () => {
                     surfer.draw();
@@ -262,13 +265,13 @@
 
     function startMusicLoop() {
         if (!audioElement) return;
-        audioElement.play().catch(e => console.log("Reproducción bloqueada:", e));
+        audioElement.play().catch(e => console.log("Reproducción bloqueada o error de audio:", e));
         isPlaying = true;
         document.getElementById('play-icon').classList.add('playing');
         
         clearInterval(musicInterval);
         musicInterval = setInterval(() => {
-            if (audioElement.duration) {
+            if (audioElement && audioElement.duration && !isNaN(audioElement.duration)) {
                 trackProgressPercent = (audioElement.currentTime / audioElement.duration) * 100;
                 document.getElementById('track-progress').style.width = trackProgressPercent + '%';
             }
@@ -276,7 +279,9 @@
     }
 
     function stopMusicLoop() {
-        if (audioElement) audioElement.pause();
+        if (audioElement) {
+            try { audioElement.pause(); } catch(e) {}
+        }
         isPlaying = false;
         clearInterval(musicInterval);
         document.getElementById('play-icon').classList.remove('playing');
@@ -353,7 +358,7 @@
             let currentW = this.isDucking ? this.height : this.width;
             let currentH = this.isDucking ? this.duckHeight : this.normalHeight;
 
-            if (images.surfer && images.surfer.complete) {
+            if (images.surfer && images.surfer.complete && images.surfer.naturalWidth > 0) {
                 if (this.isDucking) {
                     ctx.translate(this.x + currentW/2, this.y + currentH/2);
                     ctx.rotate(Math.PI / 2);
@@ -405,7 +410,7 @@
         update() { this.x -= gameSpeed; }
         draw() {
             let imgKey = this.type === 'bird' ? 'bird' : 'rock';
-            if (images[imgKey] && images[imgKey].complete) {
+            if (images[imgKey] && images[imgKey].complete && images[imgKey].naturalWidth > 0) {
                 ctx.drawImage(images[imgKey], this.x, this.y, this.width, this.height);
             } else {
                 ctx.fillStyle = '#ff3366';
@@ -423,7 +428,7 @@
         }
         update() { this.x -= gameSpeed; }
         draw() {
-            if (images.coin && images.coin.complete) {
+            if (images.coin && images.coin.complete && images.coin.naturalWidth > 0) {
                 ctx.drawImage(images.coin, this.x, this.y, this.width, this.height);
             } else {
                 ctx.font = '22px sans-serif';
@@ -439,7 +444,9 @@
         score = 0;
         nextSpeedUpThreshold = 250;
         gameSpeed = 4.5;
-        if (audioElement) audioElement.currentTime = 0;
+        if (audioElement) {
+            try { audioElement.currentTime = 0; } catch(e) {}
+        }
         if (gameConfig.audio) {
             document.getElementById('track-title').innerText = `${gameConfig.audio.trackName} [ ⚡ 1.0x ]`;
         }

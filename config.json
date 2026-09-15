@@ -2,7 +2,7 @@
   "gameTitle": "CSF - SURF RIDER",
   "audio": {
     "trackName": "ALLÁ ESTÁ EL MAR",
-    "file": "audios/allá está el mar.png"
+    "file": "audios/alla_esta_el_mar.mp3"
   },
   "assets": {
     "surfer": "images/surfer.png",
