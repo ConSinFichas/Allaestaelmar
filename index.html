@@ -231,8 +231,7 @@
                 audioElement.load();
                 
                 audioElement.addEventListener('canplaythrough', () => {
-                    if ((userWantsToPlay || audioElement.onceCanPlay) && !isPlaying && !isPaused) {
-                        audioElement.onceCanPlay = false;
+                    if (userWantsToPlay && !isPlaying && !isPaused) {
                         startMusicLoop();
                     }
                 });
@@ -276,22 +275,21 @@
 
     function startMusicLoop() {
         if (!audioElement) return;
-    
-    	audioElement.play().then(() => {
+        
+        audioElement.play().then(() => {
             isPlaying = true;
             document.getElementById('play-icon').classList.add('playing');
-    	}).catch(e => {
-            console.log("Audio esperando descarga completa, se reproducirá al cargar:", e);
-            audioElement.onceCanPlay = true;
-    	});
-    
-    	clearInterval(musicInterval);
-    	musicInterval = setInterval(() => {
+        }).catch(e => {
+            console.log("Audio esperando interacción o carga:", e);
+        });
+        
+        clearInterval(musicInterval);
+        musicInterval = setInterval(() => {
             if (audioElement && audioElement.duration && !isNaN(audioElement.duration)) {
                 trackProgressPercent = (audioElement.currentTime / audioElement.duration) * 100;
                 document.getElementById('track-progress').style.width = trackProgressPercent + '%';
             }
-    	}, 200);
+        }, 200);
     }
 
     function stopMusicLoop() {
@@ -644,16 +642,15 @@
 
     function handleActionA(e) {
         userWantsToPlay = true;
-        if(e) e.preventDefault();
-    
-        if (isPaused) {
-            resumeGame();
-        } else if (gameOver) {
-            resetGame();
-        } else {
-            surfer.jump();
+        
+        if (audioElement) {
+            audioElement.play().then(() => {
+                isPlaying = true;
+                document.getElementById('play-icon').classList.add('playing');
+            }).catch(err => {
+                console.log("Audio esperando descarga completa:", err);
+            });
         }
-    }
 
         if(e) e.preventDefault();
         
