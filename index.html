@@ -473,9 +473,9 @@
 
     function drawScenery() {
         if (images.moon && images.moon.complete && images.moon.naturalWidth > 0) {
-            let moonWidth = 130;
+            let moonWidth = 150;
             let moonHeight = moonWidth * (images.moon.naturalHeight / images.moon.naturalWidth);
-            ctx.drawImage(images.moon, 475, 65, moonWidth, moonHeight);
+            ctx.drawImage(images.moon, 450, 65, moonWidth, moonHeight);
         } else {
             ctx.fillStyle = '#ff8c00';
             ctx.beginPath();
