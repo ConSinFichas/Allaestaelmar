@@ -226,6 +226,7 @@
                 
                 audioElement = new Audio(config.audio.file);
                 audioElement.loop = true;
+                audioElement.load();
                 audioElement.onerror = () => {
                     console.warn("Aviso: El archivo de audio no pudo cargarse, el juego continuará sin sonido.");
                 };
