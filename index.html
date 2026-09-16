@@ -343,14 +343,15 @@
 
     const surfer = {
         x: 60,
-        y: 160,
-        width: 34,
-        height: 36,
-        normalHeight: 36,
-        duckHeight: 22,
+        y: 338,
+        width: 68,
+        height: 72,
+        normalHeight: 72,
+        duckWidth: 51
+        duckHeight: 54,
         vy: 0,
-        gravity: 0.85,
-        jumpPower: -12.5,
+        gravity: 0.9,
+        jumpPower: -16.5,
         isGrounded: true,
         isDucking: false,
 
@@ -360,7 +361,7 @@
                 this.vy += this.gravity;
             }
 
-            let groundLevel = 195 - (this.isDucking ? this.duckHeight : this.normalHeight);
+            let groundLevel = 410 - (this.isDucking ? this.duckHeight : this.normalHeight);
             if (this.y >= groundLevel) {
                 this.y = groundLevel;
                 this.vy = 0;
@@ -370,21 +371,15 @@
 
         draw: function() {
             ctx.save();
-            let currentW = this.isDucking ? this.height : this.width;
+            let currentW = this.isDucking ? this.duckWidth : this.normalWidth;
             let currentH = this.isDucking ? this.duckHeight : this.normalHeight;
 
             if (images.surfer && images.surfer.complete && images.surfer.naturalWidth > 0) {
-                if (this.isDucking) {
-                    ctx.translate(this.x + currentW/2, this.y + currentH/2);
-                    ctx.rotate(Math.PI / 2);
-                    ctx.drawImage(images.surfer, -currentH/2, -currentW/2, currentH, currentW);
-                } else {
-                    ctx.drawImage(images.surfer, this.x, this.y, currentW, currentH);
-                }
+                ctx.drawImage(images.surfer, this.x, this.y, currentW, currentH);
             } else {
-                ctx.font = '36px sans-serif';
+                ctx.font = `${currentH}px sans-serif`;
                 ctx.textBaseline = 'top';
-                ctx.fillText('🏄', this.x, this.y - 4);
+                ctx.fillText('🏄', this.x, this.y - 8);
             }
             ctx.restore();
         },
@@ -398,7 +393,7 @@
 
         duck: function(state) {
             if (state && !this.isGrounded) {
-                this.vy += 12; 
+                this.vy += 15; 
             }
             if (this.isGrounded) {
                 this.isDucking = state;
@@ -413,13 +408,13 @@
         constructor() {
             this.x = canvas.width;
             this.type = Math.random() > 0.4 ? 'bird' : 'rock';
-            this.width = this.type === 'bird' ? 28 : 26;
-            this.height = this.type === 'bird' ? 20 : 26;
+            this.width = this.type === 'bird' ? 56 : 52;
+            this.height = this.type === 'bird' ? 40 : 52;
             
             if (this.type === 'bird') {
-                this.y = Math.random() > 0.5 ? 158 : 140; 
+                this.y = Math.random() > 0.5 ? 310 : 260;
             } else {
-                this.y = 195 - this.height; 
+                this.y = 410 - this.height;
             }
         }
         update() { this.x -= gameSpeed; }
@@ -437,16 +432,16 @@
     class Coin {
         constructor() {
             this.x = canvas.width;
-            this.y = Math.random() > 0.5 ? 145 : 175;
-            this.width = 24;
-            this.height = 24;
+            this.y = Math.random() > 0.5 ? 280 : 350;
+            this.width = 48;  // Escalado 2x
+            this.height = 48; // Escalado 2x
         }
         update() { this.x -= gameSpeed; }
         draw() {
             if (images.coin && images.coin.complete && images.coin.naturalWidth > 0) {
                 ctx.drawImage(images.coin, this.x, this.y, this.width, this.height);
             } else {
-                ctx.font = '22px sans-serif';
+                ctx.font = '44px sans-serif';
                 ctx.textBaseline = 'top';
                 ctx.fillText('🪙', this.x, this.y);
             }
