@@ -641,7 +641,9 @@
     }
 
     function handleActionA(e) {
-        if (e) e.preventDefault();
+        if (!gameOver && !isPaused && e) {
+            e.preventDefault();
+        }
         
         if (isPaused) {
             resumeGame();
