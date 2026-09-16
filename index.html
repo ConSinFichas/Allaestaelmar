@@ -229,7 +229,7 @@
                 audioElement.load();
                 
                 audioElement.addEventListener('canplaythrough', () => {
-                    if (!gameOver && !isPaused && !isPlaying) {
+                    if (userWantsToPlay && !isPlaying && !isPaused) {
                         startMusicLoop();
                     }
                 });
@@ -301,6 +301,7 @@
 
     let isPaused = false;
     let gameOver = true;
+    let userWantsToPlay = false;
 
     function togglePauseButton() {
         if (isPaused) {
@@ -598,8 +599,15 @@
     }
 
     function handleActionA(e) {
-        if (gameOver && audioElement) {
-            audioElement.play().catch(err => console.log("Audio play intent:", err));
+        userWantsToPlay = true;
+        
+        if (audioElement) {
+            audioElement.play().then(() => {
+                isPlaying = true;
+                document.getElementById('play-icon').classList.add('playing');
+            }).catch(err => {
+                console.log("Audio esperando descarga completa:", err);
+            });
         }
 
         if(e) e.preventDefault();
