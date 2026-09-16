@@ -274,7 +274,7 @@
     }
 
     function playAudioSafely() {
-        if (!audioElement) return;
+        if (!audioElement || isPlaying) return;
         audioElement.play().then(() => {
             isPlaying = true;
             document.getElementById('play-icon').classList.add('playing');
@@ -309,6 +309,10 @@
             resumeGame();
         } else if (gameOver) {
             resetGame();
+            if (audioElement && audioElement.paused) {
+                audioElement.currentTime = 0;
+                playAudioSafely();
+            }
         } else {
             pauseGame();
         }
@@ -326,8 +330,10 @@
         if (!isPaused) return;
         isPaused = false;
         
-        if (audioElement && isPlaying) {
+        if (audioElement && !isPlaying) {
             audioElement.play().catch(err => console.log(err));
+            isPlaying = true;
+            document.getElementById('play-icon').classList.add('playing');
         }
         
         if (animationFrameId) {
@@ -471,10 +477,8 @@
         surfer.isGrounded = true;
         surfer.isDucking = false;
 
-        if (audioElement) {
-            audioElement.currentTime = 0;
-            playAudioSafely();
-        }
+        userWantsToPlay = true;
+        playAudioSafely();
 
         if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
@@ -570,9 +574,17 @@
             obstacles.push(new Obstacle());
         }
         
+        // Verificación estricta para evitar que las monedas aparezcan junto a los obstáculos
+        let canSpawnCoin = true;
+        for (let obs of obstacles) {
+            if (Math.abs(obs.x - canvas.width) < 200) {
+                canSpawnCoin = false;
+                break;
+            }
+        }
+
         let lastCoin = coins[coins.length - 1];
-        let safeFromObstacleSpawn = !lastObs || (canvas.width - lastObs.x > 140);
-        if (frames % 115 === 0 && safeFromObstacleSpawn && (!lastCoin || (canvas.width - lastCoin.x) > 160)) {
+        if (frames % 120 === 0 && canSpawnCoin && (!lastCoin || (canvas.width - lastCoin.x) > 180)) {
             coins.push(new Coin());
         }
 
@@ -652,10 +664,9 @@
     }
 
     function handleActionA(e) {
+        if (e) e.preventDefault();
         userWantsToPlay = true;
         playAudioSafely();
-
-        if (e) e.preventDefault();
         
         if (isPaused) {
             resumeGame();
