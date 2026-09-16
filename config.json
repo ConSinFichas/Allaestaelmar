@@ -1,5 +1,5 @@
 {
-  "gameTitle": "CON SIN FICHAS",
+  "gameTitle": "Allá Está el Mar",
   "audio": {
     "trackName": "ALLÁ ESTÁ EL MAR",
     "file": "audios/alla_esta_el_mar.mp3"
@@ -8,6 +8,7 @@
     "surfer": "images/surfer.png",
     "coin": "images/coin.png",
     "bird": "images/bird.png",
-    "rock": "images/rock.png"
+    "rock": "images/rock.png",
+    "moon": "images/luna.png"
   }
 }
