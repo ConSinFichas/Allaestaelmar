@@ -371,13 +371,19 @@
 
         draw: function() {
             ctx.save();
-            let currentW = this.isDucking ? this.duckWidth : this.normalWidth;
+            let currentW = this.isDucking ? this.height : this.width;
             let currentH = this.isDucking ? this.duckHeight : this.normalHeight;
 
             if (images.surfer && images.surfer.complete && images.surfer.naturalWidth > 0) {
-                ctx.drawImage(images.surfer, this.x, this.y, currentW, currentH);
+                if (this.isDucking) {
+                    ctx.translate(this.x + currentW/2, this.y + currentH/2);
+                    ctx.rotate(Math.PI / 2);
+                    ctx.drawImage(images.surfer, -currentH/2, -currentW/2, currentH, currentW);
+                } else {
+                    ctx.drawImage(images.surfer, this.x, this.y, currentW, currentH);
+                }
             } else {
-                ctx.font = `${currentH}px sans-serif`;
+                ctx.font = '72px sans-serif';
                 ctx.textBaseline = 'top';
                 ctx.fillText('🏄', this.x, this.y - 8);
             }
