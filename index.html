@@ -232,7 +232,7 @@
                 
                 audioElement.addEventListener('canplaythrough', () => {
                     if (userWantsToPlay && !isPlaying && !isPaused) {
-                        playAudioSafely();
+                        startMusicLoop();
                     }
                 });
 
@@ -273,8 +273,9 @@
         });
     }
 
-    function playAudioSafely() {
-        if (!audioElement || isPlaying) return;
+    function startMusicLoop() {
+        if (!audioElement) return;
+        
         audioElement.play().then(() => {
             isPlaying = true;
             document.getElementById('play-icon').classList.add('playing');
@@ -309,10 +310,6 @@
             resumeGame();
         } else if (gameOver) {
             resetGame();
-            if (audioElement && audioElement.paused) {
-                audioElement.currentTime = 0;
-                playAudioSafely();
-            }
         } else {
             pauseGame();
         }
@@ -322,24 +319,14 @@
         if (gameOver) return;
         isPaused = true;
         stopMusicLoop();
-        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        cancelAnimationFrame(animationFrameId);
         drawPauseScreen();
     }
 
     function resumeGame() {
-        if (!isPaused) return;
         isPaused = false;
-        
-        if (audioElement && !isPlaying) {
-            audioElement.play().catch(err => console.log(err));
-            isPlaying = true;
-            document.getElementById('play-icon').classList.add('playing');
-        }
-        
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-        }
-        animationFrameId = requestAnimationFrame(gameLoop);
+        startMusicLoop();
+        startGameLoop();
     }
 
     const canvas = document.getElementById('gameCanvas');
@@ -463,27 +450,25 @@
     }
 
     function resetGame() {
-        score = 0;
-        gameSpeed = 4.5;
-        nextSpeedUpThreshold = 250;
         obstacles = [];
         coins = [];
+        score = 0;
+        nextSpeedUpThreshold = 250;
+        gameSpeed = 4.5;
+        if (gameConfig.audio) {
+            document.getElementById('track-title').innerText = `${gameConfig.audio.trackName} [ ⚡ 1.0x ]`;
+        }
         gameOver = false;
         isPaused = false;
-        frames = 0;
+        frames = 1;
         
-        surfer.y = 328;
-        surfer.vy = 0;
-        surfer.isGrounded = true;
-        surfer.isDucking = false;
+        startMusicLoop();
+        startGameLoop();
+    }
 
-        userWantsToPlay = true;
-        playAudioSafely();
-
-        if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-        }
-        animationFrameId = requestAnimationFrame(gameLoop);
+    function startGameLoop() {
+        if (animationFrameId) cancelAnimationFrame(animationFrameId);
+        gameLoop();
     }
 
     function drawScenery() {
@@ -574,17 +559,9 @@
             obstacles.push(new Obstacle());
         }
         
-        // Verificación estricta para evitar que las monedas aparezcan junto a los obstáculos
-        let canSpawnCoin = true;
-        for (let obs of obstacles) {
-            if (Math.abs(obs.x - canvas.width) < 200) {
-                canSpawnCoin = false;
-                break;
-            }
-        }
-
         let lastCoin = coins[coins.length - 1];
-        if (frames % 120 === 0 && canSpawnCoin && (!lastCoin || (canvas.width - lastCoin.x) > 180)) {
+        let safeFromObstacleSpawn = !lastObs || (canvas.width - lastObs.x > 140);
+        if (frames % 115 === 0 && safeFromObstacleSpawn && (!lastCoin || (canvas.width - lastCoin.x) > 160)) {
             coins.push(new Coin());
         }
 
@@ -664,9 +641,18 @@
     }
 
     function handleActionA(e) {
-        if (e) e.preventDefault();
         userWantsToPlay = true;
-        playAudioSafely();
+        
+        if (audioElement) {
+            audioElement.play().then(() => {
+                isPlaying = true;
+                document.getElementById('play-icon').classList.add('playing');
+            }).catch(err => {
+                console.log("Audio esperando descarga completa:", err);
+            });
+        }
+
+        if(e) e.preventDefault();
         
         if (isPaused) {
             resumeGame();
