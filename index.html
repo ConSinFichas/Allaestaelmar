@@ -106,7 +106,9 @@
 
         #game-screen {
             border: 2px solid #00d9ff;
-            width: 100%; height: 230px;
+            width: 100%; 
+            aspect-ratio: 600 / 230;
+            height: auto;
             background-color: #01060c;
             position: relative;
             border-radius: 4px;
@@ -115,7 +117,7 @@
             cursor: pointer;
             touch-action: none;
         }
-        canvas { display: block; width: 100%; height: 100%; object-fit: fill; }
+        canvas { display: block; width: 100%; height: 100%; }
 
         .brand-title {
             text-align: center; font-size: 13px; 
@@ -342,10 +344,10 @@
     const surfer = {
         x: 60,
         y: 160,
-        width: 34,
-        height: 36,
-        normalHeight: 36,
-        duckHeight: 22,
+        width: 72,
+        height: 66,
+        normalHeight: 66,
+        duckHeight: 44,
         vy: 0,
         gravity: 0.85,
         jumpPower: -12.5,
@@ -411,8 +413,8 @@
         constructor() {
             this.x = canvas.width;
             this.type = Math.random() > 0.4 ? 'bird' : 'rock';
-            this.width = this.type === 'bird' ? 28 : 26;
-            this.height = this.type === 'bird' ? 20 : 26;
+            this.width = this.type === 'bird' ? 34 : 48;
+            this.height = this.type === 'bird' ? 22 : 48;
             
             if (this.type === 'bird') {
                 this.y = Math.random() > 0.5 ? 158 : 140; 
@@ -436,8 +438,8 @@
         constructor() {
             this.x = canvas.width;
             this.y = Math.random() > 0.5 ? 145 : 175;
-            this.width = 24;
-            this.height = 24;
+            this.width = 48;
+            this.height = 48;
         }
         update() { this.x -= gameSpeed; }
         draw() {
