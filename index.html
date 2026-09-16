@@ -519,9 +519,37 @@
     function gameLoop() {
         if (isPaused) return; 
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let currentTime = (audioElement && !audioElement.paused) ? audioElement.currentTime : 0;
+        let isSpecialEvent = currentTime >= 70 && currentTime <= 75;
+
+        if (isSpecialEvent) {
+            let bgFlash = Math.floor(frames / 12) % 2 === 0;
+            ctx.fillStyle = bgFlash ? '#5a0000' : '#1a0000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
         
         drawScenery();
+
+        if (isSpecialEvent) {
+            let textFlash = Math.floor(frames / 8) % 2 === 0;
+            if (textFlash) {
+                ctx.save();
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = '#ff0000';
+                ctx.shadowBlur = 12;
+                ctx.font = 'bold 36px Courier New';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                ctx.fillText('¿Dónde está', canvas.width / 2, 110);
+                ctx.fillText('la China?', canvas.width / 2, 152);
+                
+                ctx.restore();
+            }
+        }
+
         surfer.update();
         surfer.draw();
 
@@ -587,6 +615,7 @@
             
             ctx.fillStyle = '#ff3366';
             ctx.font = 'bold 24px Courier New';
+            ctx.textAlign = 'left';
             ctx.fillText('GAME OVER', 225, 100);
             
             ctx.fillStyle = '#00d9ff';
