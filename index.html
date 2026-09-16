@@ -350,7 +350,7 @@
         duckHeight: 54,
         vy: 0,
         gravity: 1.1,
-        jumpPower: -17.5,
+        jumpPower: -20,
         isGrounded: true,
         isDucking: false,
 
@@ -519,8 +519,17 @@
         surfer.update();
         surfer.draw();
 
-        if (frames % Math.max(65, 120 - Math.floor(gameSpeed*5)) === 0) obstacles.push(new Obstacle());
-        if (frames % 85 === 0) coins.push(new Coin());
+        let lastObs = obstacles[obstacles.length - 1];
+        let obstacleInterval = Math.max(70, 120 - Math.floor(gameSpeed * 4));
+        if (frames % obstacleInterval === 0 && (!lastObs || (canvas.width - lastObs.x) > 240)) {
+            obstacles.push(new Obstacle());
+        }
+        
+        let lastCoin = coins[coins.length - 1];
+        let safeFromObstacleSpawn = !lastObs || (canvas.width - lastObs.x > 140);
+        if (frames % 115 === 0 && safeFromObstacleSpawn && (!lastCoin || (canvas.width - lastCoin.x) > 160)) {
+            coins.push(new Coin());
+        }
 
         for (let i = 0; i < obstacles.length; i++) {
             let obs = obstacles[i];
