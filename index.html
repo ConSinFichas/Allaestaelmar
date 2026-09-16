@@ -176,7 +176,7 @@
     </div>
 
     <div id="game-screen">
-        <canvas id="gameCanvas" width="600" height="230"></canvas>
+        <canvas id="gameCanvas" width="600" height="480"></canvas>
     </div>
 
     <div class="brand-title" id="brand-title-text">
@@ -342,15 +342,15 @@
     let coins = [];
 
     const surfer = {
-        x: 60,
-        y: 160,
-        width: 34,
-        height: 36,
-        normalHeight: 36,
-        duckHeight: 22,
+        x: 80,
+        y: 328,
+        normalWidth: 60,
+        normalHeight: 72,
+        duckWidth: 45,
+        duckHeight: 54,
         vy: 0,
-        gravity: 0.85,
-        jumpPower: -12.5,
+        gravity: 1.1,
+        jumpPower: -17.5,
         isGrounded: true,
         isDucking: false,
 
@@ -360,7 +360,7 @@
                 this.vy += this.gravity;
             }
 
-            let groundLevel = 195 - (this.isDucking ? this.duckHeight : this.normalHeight);
+            let groundLevel = 400 - (this.isDucking ? this.duckHeight : this.normalHeight);
             if (this.y >= groundLevel) {
                 this.y = groundLevel;
                 this.vy = 0;
@@ -370,21 +370,15 @@
 
         draw: function() {
             ctx.save();
-            let currentW = this.isDucking ? this.height : this.width;
+            let currentW = this.isDucking ? this.duckWidth : this.normalWidth;
             let currentH = this.isDucking ? this.duckHeight : this.normalHeight;
 
             if (images.surfer && images.surfer.complete && images.surfer.naturalWidth > 0) {
-                if (this.isDucking) {
-                    ctx.translate(this.x + currentW/2, this.y + currentH/2);
-                    ctx.rotate(Math.PI / 2);
-                    ctx.drawImage(images.surfer, -currentH/2, -currentW/2, currentH, currentW);
-                } else {
-                    ctx.drawImage(images.surfer, this.x, this.y, currentW, currentH);
-                }
+                ctx.drawImage(images.surfer, this.x, this.y, currentW, currentH);
             } else {
-                ctx.font = '36px sans-serif';
+                ctx.font = `${currentH}px sans-serif`;
                 ctx.textBaseline = 'top';
-                ctx.fillText('🏄', this.x, this.y - 4);
+                ctx.fillText('🏄', this.x, this.y - 6);
             }
             ctx.restore();
         },
@@ -398,12 +392,14 @@
 
         duck: function(state) {
             if (state && !this.isGrounded) {
-                this.vy += 12; 
+                this.vy += 15; 
             }
             if (this.isGrounded) {
                 this.isDucking = state;
                 if (state) {
-                    this.y += (this.normalHeight - this.duckHeight);
+                    this.y = 400 - this.duckHeight;
+                } else {
+                    this.y = 400 - this.normalHeight;
                 }
             }
         }
@@ -413,13 +409,13 @@
         constructor() {
             this.x = canvas.width;
             this.type = Math.random() > 0.4 ? 'bird' : 'rock';
-            this.width = this.type === 'bird' ? 28 : 26;
-            this.height = this.type === 'bird' ? 20 : 26;
+            this.width = this.type === 'bird' ? 56 : 52;
+            this.height = this.type === 'bird' ? 36 : 50;
             
             if (this.type === 'bird') {
-                this.y = Math.random() > 0.5 ? 158 : 140; 
+                this.y = Math.random() > 0.5 ? 320 : 270;
             } else {
-                this.y = 195 - this.height; 
+                this.y = 400 - this.height; 
             }
         }
         update() { this.x -= gameSpeed; }
@@ -437,16 +433,16 @@
     class Coin {
         constructor() {
             this.x = canvas.width;
-            this.y = Math.random() > 0.5 ? 145 : 175;
-            this.width = 24;
-            this.height = 24;
+            this.y = Math.random() > 0.5 ? 270 : 340;
+            this.width = 48;
+            this.height = 48;
         }
         update() { this.x -= gameSpeed; }
         draw() {
             if (images.coin && images.coin.complete && images.coin.naturalWidth > 0) {
                 ctx.drawImage(images.coin, this.x, this.y, this.width, this.height);
             } else {
-                ctx.font = '22px sans-serif';
+                ctx.font = '40px sans-serif';
                 ctx.textBaseline = 'top';
                 ctx.fillText('🪙', this.x, this.y);
             }
@@ -478,31 +474,31 @@
     function drawScenery() {
         ctx.fillStyle = '#ff8c00';
         ctx.beginPath();
-        ctx.arc(520, 55, 25, 0, Math.PI * 2);
+        ctx.arc(520, 110, 45, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.strokeStyle = 'rgba(0, 217, 255, 0.4)';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.moveTo(0, 180 + Math.sin(frames * 0.05) * 4);
+        ctx.moveTo(0, 360 + Math.sin(frames * 0.05) * 8);
         for(let i=0; i<canvas.width; i+=20) {
-            ctx.lineTo(i, 180 + Math.sin((frames + i) * 0.05) * 4);
+            ctx.lineTo(i, 360 + Math.sin((frames + i) * 0.05) * 8);
         }
         ctx.stroke();
 
         ctx.fillStyle = '#02182b';
-        ctx.fillRect(0, 195, canvas.width, 40);
+        ctx.fillRect(0, 400, canvas.width, 80);
         ctx.strokeStyle = '#00d9ff';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(0, 195); ctx.lineTo(canvas.width, 195);
+        ctx.moveTo(0, 400); ctx.lineTo(canvas.width, 400);
         ctx.stroke();
 
         ctx.fillStyle = '#00d9ff';
-        ctx.font = 'bold 12px Courier New';
+        ctx.font = 'bold 18px Courier New';
         let hiStr = String(Math.floor(hiScore)).padStart(5, '0');
         let scoreStr = String(Math.floor(score)).padStart(5, '0');
-        ctx.fillText(`HI ${hiStr}    SCORE ${scoreStr}`, 235, 25);
+        ctx.fillText(`HI ${hiStr}    SCORE ${scoreStr}`, 170, 35);
     }
 
     function drawPauseScreen() {
