@@ -641,18 +641,7 @@
     }
 
     function handleActionA(e) {
-        userWantsToPlay = true;
-        
-        if (audioElement) {
-            audioElement.play().then(() => {
-                isPlaying = true;
-                document.getElementById('play-icon').classList.add('playing');
-            }).catch(err => {
-                console.log("Audio esperando descarga completa:", err);
-            });
-        }
-
-        if(e) e.preventDefault();
+        if (e) e.preventDefault();
         
         if (isPaused) {
             resumeGame();
