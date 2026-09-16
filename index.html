@@ -280,7 +280,13 @@
             isPlaying = true;
             document.getElementById('play-icon').classList.add('playing');
         }).catch(e => {
-            console.log("Audio esperando interacción o carga:", e);
+            console.log("Audio esperando buffer, reintentando automáticamente:", e);
+            audioElement.addEventListener('canplay', () => {
+                audioElement.play().then(() => {
+                    isPlaying = true;
+                    document.getElementById('play-icon').classList.add('playing');
+                }).catch(err => console.log("Error en reintento de audio:", err));
+            }, { once: true });
         });
         
         clearInterval(musicInterval);
