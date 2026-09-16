@@ -528,15 +528,16 @@
             obs.draw();
 
             let currentH = surfer.isDucking ? surfer.duckHeight : surfer.normalHeight;
-            let currentW = surfer.isDucking ? surfer.height : surfer.width;
+            let currentW = surfer.isDucking ? surfer.duckWidth : surfer.normalWidth;
             
             if (
-                surfer.x + 5 < obs.x + obs.width &&
-                surfer.x + currentW - 5 > obs.x &&
-                surfer.y + 5 < obs.y + obs.height &&
-                surfer.y + currentH - 5 > obs.y
+                surfer.x + 10 < obs.x + obs.width &&
+                surfer.x + currentW - 10 > obs.x &&
+                surfer.y + 10 < obs.y + obs.height &&
+                surfer.y + currentH - 10 > obs.y
             ) {
                 gameOver = true;
+                stopMusicLoop();
             }
 
             if (obs.x + obs.width < 0) { obstacles.splice(i, 1); i--; }
@@ -548,7 +549,7 @@
             c.draw();
 
             let currentH = surfer.isDucking ? surfer.duckHeight : surfer.normalHeight;
-            let currentW = surfer.isDucking ? surfer.height : surfer.width;
+            let currentW = surfer.isDucking ? surfer.duckWidth : surfer.normalWidth;
 
             if (
                 surfer.x < c.x + c.width &&
