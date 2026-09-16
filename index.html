@@ -587,6 +587,10 @@
     }
 
     function handleActionA(e) {
+        if (gameOver && audioElement) {
+            audioElement.play().catch(err => console.log("Audio play intent:", err));
+        }
+
         if(e) e.preventDefault();
         
         if (isPaused) {
