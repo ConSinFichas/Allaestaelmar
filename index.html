@@ -227,6 +227,13 @@
                 audioElement = new Audio(config.audio.file);
                 audioElement.loop = true;
                 audioElement.load();
+                
+                audioElement.addEventListener('canplaythrough', () => {
+                    if (!gameOver && !isPaused && !isPlaying) {
+                        startMusicLoop();
+                    }
+                });
+
                 audioElement.onerror = () => {
                     console.warn("Aviso: El archivo de audio no pudo cargarse, el juego continuará sin sonido.");
                 };
@@ -266,9 +273,13 @@
 
     function startMusicLoop() {
         if (!audioElement) return;
-        audioElement.play().catch(e => console.log("Reproducción bloqueada o error de audio:", e));
-        isPlaying = true;
-        document.getElementById('play-icon').classList.add('playing');
+        
+        audioElement.play().then(() => {
+            isPlaying = true;
+            document.getElementById('play-icon').classList.add('playing');
+        }).catch(e => {
+            console.log("Audio esperando interacción o carga:", e);
+        });
         
         clearInterval(musicInterval);
         musicInterval = setInterval(() => {
