@@ -666,6 +666,20 @@
         if (gameOver) {
             if (score > hiScore) hiScore = Math.floor(score);
             
+            if (topPlayers.length === 0 && !window.fetchingRanking) {
+                window.fetchingRanking = true;
+                fetch(RANKING_API_URL)
+                    .then(res => res.json())
+                    .then(data => { 
+                        topPlayers = data; 
+                        window.fetchingRanking = false;
+                    })
+                    .catch(err => {
+                        console.error("Error al cargar ranking", err);
+                        window.fetchingRanking = false;
+                    });
+            }
+            
             if (!scoreSaved && score > 0) {
                 scoreSaved = true;
                 let playerName = prompt("¡Buen puntaje! Ingresa tu nombre para el ranking:", "Jugador");
@@ -682,7 +696,6 @@
             ctx.fillStyle = 'rgba(1, 6, 12, 0.95)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Textos de Game Over aumentados al doble de tamaño y legibles
             ctx.fillStyle = '#ff3366';
             ctx.font = 'bold 48px Courier New';
             ctx.textAlign = 'center';
@@ -699,7 +712,7 @@
             ctx.font = '18px Courier New';
             if (topPlayers.length === 0) {
                 ctx.fillStyle = 'rgba(0, 217, 255, 0.6)';
-                ctx.fillText('Cargando ranking...', canvas.width / 2, 200);
+                ctx.fillText('Conectando al ranking...', canvas.width / 2, 200);
             } else {
                 topPlayers.forEach((p, index) => {
                     let text = `${index + 1}. ${p.name.padEnd(10, ' ')} ${p.score}`;
