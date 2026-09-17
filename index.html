@@ -244,7 +244,7 @@
 
                 loadImages(config.assets, () => {
                     surfer.draw();
-                    drawScenery();
+                    drawScenery(0);
                     ctx.fillStyle = '#00d9ff';
                     ctx.font = 'bold 14px Courier New';
                     ctx.fillText('Toca el Play, la pantalla o A para iniciar', 115, 115);
@@ -473,16 +473,30 @@
         gameLoop();
     }
 
-    function drawScenery() {
-        if (images.moon && images.moon.complete && images.moon.naturalWidth > 0) {
-            let moonWidth = 150;
-            let moonHeight = moonWidth * (images.moon.naturalHeight / images.moon.naturalWidth);
-            ctx.drawImage(images.moon, 450, 65, moonWidth, moonHeight);
-        } else {
-            ctx.fillStyle = '#ff8c00';
-            ctx.beginPath();
-            ctx.arc(520, 110, 45, 0, Math.PI * 2);
-            ctx.fill();
+    function drawScenery(currentTime) {
+        let moonAlpha = 1.0;
+        if (currentTime >= 42 && currentTime < 43) {
+            moonAlpha = 1.0 - (currentTime - 42);
+        } else if (currentTime >= 43 && currentTime <= 53) {
+            moonAlpha = 0.0;
+        } else if (currentTime > 53 && currentTime <= 54) {
+            moonAlpha = currentTime - 53;
+        }
+
+        if (moonAlpha > 0) {
+            ctx.save();
+            ctx.globalAlpha = moonAlpha;
+            if (images.moon && images.moon.complete && images.moon.naturalWidth > 0) {
+                let moonWidth = 150;
+                let moonHeight = moonWidth * (images.moon.naturalHeight / images.moon.naturalWidth);
+                ctx.drawImage(images.moon, 450, 65, moonWidth, moonHeight);
+            } else {
+                ctx.fillStyle = '#ff8c00';
+                ctx.beginPath();
+                ctx.arc(520, 110, 45, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
         }
 
         ctx.strokeStyle = 'rgba(0, 217, 255, 0.4)';
@@ -522,9 +536,14 @@
         if (isPaused) return; 
 
         let currentTime = (audioElement && !audioElement.paused) ? audioElement.currentTime : 0;
-        let isSpecialEvent = currentTime >= 84 && currentTime <= 90;
+        let isMoonEvent = currentTime >= 42 && currentTime <= 54;
+        let isChinaEvent = currentTime >= 84 && currentTime <= 90;
 
-        if (isSpecialEvent) {
+        if (isMoonEvent) {
+            let bgFlash = Math.floor(frames / 12) % 2 === 0;
+            ctx.fillStyle = bgFlash ? '#4a0e4e' : '#240033';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        } else if (isChinaEvent) {
             let bgFlash = Math.floor(frames / 12) % 2 === 0;
             ctx.fillStyle = bgFlash ? '#5a0000' : '#1a0000';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -532,9 +551,25 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
         
-        drawScenery();
+        drawScenery(currentTime);
 
-        if (isSpecialEvent) {
+        if (isMoonEvent) {
+            let textFlash = Math.floor(frames / 8) % 2 === 0;
+            if (textFlash) {
+                ctx.save();
+                ctx.fillStyle = '#ffffff';
+                ctx.shadowColor = '#d900ff';
+                ctx.shadowBlur = 12;
+                ctx.font = 'bold 30px Courier New';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                ctx.fillText('¿Y dónde está', canvas.width / 2, 110);
+                ctx.fillText('la Luna?', canvas.width / 2, 152);
+                
+                ctx.restore();
+            }
+        } else if (isChinaEvent) {
             let textFlash = Math.floor(frames / 8) % 2 === 0;
             if (textFlash) {
                 ctx.save();
