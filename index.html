@@ -337,6 +337,7 @@
     let frames = 0;
     let score = 0;
     let hiScore = 0; 
+    let coinsCollected = 0;
     let nextSpeedUpThreshold = 250;
     let gameSpeed = 4.5;
     let animationFrameId;
@@ -455,6 +456,7 @@
         obstacles = [];
         coins = [];
         score = 0;
+        coinsCollected = 0;
         nextSpeedUpThreshold = 250;
         gameSpeed = 4.5;
         if (gameConfig.audio) {
@@ -477,10 +479,10 @@
         let moonAlpha = 1.0;
         if (currentTime >= 42 && currentTime < 43) {
             moonAlpha = 1.0 - (currentTime - 42);
-        } else if (currentTime >= 43 && currentTime <= 53) {
+        } else if (currentTime >= 43 && currentTime <= 49) {
             moonAlpha = 0.0;
-        } else if (currentTime > 53 && currentTime <= 54) {
-            moonAlpha = currentTime - 53;
+        } else if (currentTime > 49 && currentTime <= 50) {
+            moonAlpha = currentTime - 49;
         }
 
         if (moonAlpha > 0) {
@@ -517,10 +519,10 @@
         ctx.stroke();
 
         ctx.fillStyle = '#00d9ff';
-        ctx.font = 'bold 18px Courier New';
+        ctx.font = 'bold 15px Courier New';
         let hiStr = String(Math.floor(hiScore)).padStart(5, '0');
         let scoreStr = String(Math.floor(score)).padStart(5, '0');
-        ctx.fillText(`HI ${hiStr}    SCORE ${scoreStr}`, 170, 35);
+        ctx.fillText(`HI ${hiStr}  SC ${scoreStr}  🪙 ${coinsCollected}`, 85, 35);
     }
 
     function drawPauseScreen() {
@@ -537,7 +539,7 @@
 
         let currentTime = (audioElement && !audioElement.paused) ? audioElement.currentTime : 0;
         let isMoonEvent = currentTime >= 42 && currentTime <= 50;
-        let isChinaEvent = currentTime >= 83 && currentTime <= 90;
+        let isChinaEvent = currentTime >= 88 && currentTime <= 95;
 
         if (isMoonEvent) {
             let bgFlash = Math.floor(frames / 12) % 2 === 0;
@@ -636,7 +638,7 @@
                 surfer.y < c.y + c.height &&
                 surfer.y + currentH > c.y
             ) {
-                score += 50; 
+                coinsCollected++; 
                 coins.splice(i, 1);
                 i--;
             } else if (c.x + c.width < 0) {
@@ -652,12 +654,17 @@
             
             ctx.fillStyle = '#ff3366';
             ctx.font = 'bold 24px Courier New';
-            ctx.textAlign = 'left';
-            ctx.fillText('GAME OVER', 225, 100);
+            ctx.textAlign = 'center';
+            ctx.fillText('GAME OVER', canvas.width / 2, 95);
             
             ctx.fillStyle = '#00d9ff';
-            ctx.font = '13px Courier New';
-            ctx.fillText('Toca la pantalla o Presiona A para reiniciar', 110, 135);
+            ctx.font = '14px Courier New';
+            ctx.fillText(`SCORE FINAL: ${Math.floor(score)}`, canvas.width / 2, 135);
+            ctx.fillText(`🪙 MONEDAS: ${coinsCollected}`, canvas.width / 2, 160);
+            
+            ctx.font = '12px Courier New';
+            ctx.fillText('Toca la pantalla o A para reiniciar', canvas.width / 2, 205);
+            ctx.textAlign = 'left'; // reset text align
             
             return; 
         }
