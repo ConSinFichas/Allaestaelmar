@@ -258,8 +258,8 @@
                     surfer.draw();
                     drawScenery(0);
                     ctx.fillStyle = '#00d9ff';
-                    ctx.font = 'bold 14px Courier New';
-                    ctx.fillText('Toca la pantalla o A para iniciar', 140, 115);
+                    ctx.font = 'bold 22px Courier New';
+                    ctx.fillText('Toca la pantalla o A para iniciar', 65, 120);
                     gameOver = true;
                     frames = 0;
                 });
@@ -531,11 +531,12 @@
         ctx.moveTo(0, 400); ctx.lineTo(canvas.width, 400);
         ctx.stroke();
 
+        // Puntuación superior más grande
         ctx.fillStyle = '#00d9ff';
-        ctx.font = 'bold 15px Courier New';
+        ctx.font = 'bold 24px Courier New';
         let hiStr = String(Math.floor(hiScore)).padStart(5, '0');
         let scoreStr = String(Math.floor(score)).padStart(5, '0');
-        ctx.fillText(`HI ${hiStr}  SC ${scoreStr}  🪙 ${coinsCollected}`, 85, 35);
+        ctx.fillText(`HI ${hiStr}  SC ${scoreStr}  🪙 ${coinsCollected}`, 55, 38);
     }
 
     function drawPauseScreen() {
@@ -543,8 +544,10 @@
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
         ctx.fillStyle = '#00d9ff';
-        ctx.font = 'bold 24px Courier New';
-        ctx.fillText('PAUSA', 265, 100);
+        ctx.font = 'bold 40px Courier New';
+        ctx.textAlign = 'center';
+        ctx.fillText('PAUSA', canvas.width / 2, 240);
+        ctx.textAlign = 'left';
     }
 
     function gameLoop() {
@@ -575,7 +578,7 @@
                 ctx.fillStyle = '#ffffff';
                 ctx.shadowColor = '#d900ff';
                 ctx.shadowBlur = 12;
-                ctx.font = 'bold 30px Courier New';
+                ctx.font = 'bold 38px Courier New';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
@@ -591,7 +594,7 @@
                 ctx.fillStyle = '#ffffff';
                 ctx.shadowColor = '#ff0000';
                 ctx.shadowBlur = 12;
-                ctx.font = 'bold 36px Courier New';
+                ctx.font = 'bold 44px Courier New';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
                 
@@ -676,37 +679,38 @@
                 }
             }
 
-            ctx.fillStyle = 'rgba(1, 6, 12, 0.9)';
+            ctx.fillStyle = 'rgba(1, 6, 12, 0.95)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
+            // Textos de Game Over aumentados al doble de tamaño y legibles
             ctx.fillStyle = '#ff3366';
-            ctx.font = 'bold 30px Courier New';
+            ctx.font = 'bold 48px Courier New';
             ctx.textAlign = 'center';
-            ctx.fillText('GAME OVER', canvas.width / 2, 50);
+            ctx.fillText('GAME OVER', canvas.width / 2, 65);
             
             ctx.fillStyle = '#00d9ff';
-            ctx.font = '14px Courier New';
-            ctx.fillText(`PUNTAJE FINAL: ${Math.floor(score)}  |  🪙 FICHAS: ${coinsCollected}`, canvas.width / 2, 78);
+            ctx.font = '22px Courier New';
+            ctx.fillText(`FINAL: ${Math.floor(score)}  |  🪙 FICHAS: ${coinsCollected}`, canvas.width / 2, 115);
             
             ctx.fillStyle = '#ff8c00';
-            ctx.font = 'bold 12px Courier New';
-            ctx.fillText('--- MEJORES PUNTAJES ---', canvas.width / 2, 105);
+            ctx.font = 'bold 20px Courier New';
+            ctx.fillText('--- MEJORES PUNTAJES ---', canvas.width / 2, 160);
             
-            ctx.font = '11px Courier New';
+            ctx.font = '18px Courier New';
             if (topPlayers.length === 0) {
                 ctx.fillStyle = 'rgba(0, 217, 255, 0.6)';
-                ctx.fillText('Cargando ranking...', canvas.width / 2, 125);
+                ctx.fillText('Cargando ranking...', canvas.width / 2, 200);
             } else {
                 topPlayers.forEach((p, index) => {
-                    let text = `${index + 1}. ${p.name.padEnd(12, ' ')} ${p.score}`;
+                    let text = `${index + 1}. ${p.name.padEnd(10, ' ')} ${p.score}`;
                     ctx.fillStyle = (index === 0) ? '#ffff00' : '#00d9ff';
-                    ctx.fillText(text, canvas.width / 2, 122 + (index * 16));
+                    ctx.fillText(text, canvas.width / 2, 195 + (index * 30));
                 });
             }
             
             ctx.fillStyle = '#00d9ff';
-            ctx.font = '13px Courier New';
-            ctx.fillText('Toca la pantalla para reiniciar', canvas.width / 2, 220);
+            ctx.font = '20px Courier New';
+            ctx.fillText('Toca la pantalla para reiniciar', canvas.width / 2, 395);
             ctx.textAlign = 'left';
             
             return; 
