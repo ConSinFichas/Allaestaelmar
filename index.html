@@ -214,7 +214,7 @@
 
 <script>
     const RANKING_API_URL = 'https://script.google.com/macros/s/AKfycbyYKNTc021pcZQ4HyKTFhsV4jG-U3tbSpiNGeCtUpu59hEpNqCwkQfnvBiVZKhWY7UhOg/exec';
-    let topPlayers = [];
+    let topPlayers = JSON.parse(localStorage.getItem('cachedRanking')) || [];
     let scoreSaved = false;
 
     let gameConfig = {};
@@ -227,19 +227,23 @@
     function fetchRanking() {
         fetch(RANKING_API_URL)
             .then(res => res.json())
-            .then(data => {
+            .then(data => { 
+                let fetchedList = [];
                 if (Array.isArray(data)) {
-                    topPlayers = data;
+                    fetchedList = data;
                 } else if (data && Array.isArray(data.ranking)) {
-                    topPlayers = data.ranking;
+                    fetchedList = data.ranking;
                 } else if (data && Array.isArray(data.players)) {
-                    topPlayers = data.players;
-                } else {
-                    topPlayers = [];
+                    fetchedList = data.players;
                 }
 
-                if (gameOver && frames > 0) {
-                    drawGameOverScreen(); 
+                if (fetchedList.length > 0) {
+                    topPlayers = fetchedList;
+                    localStorage.setItem('cachedRanking', JSON.stringify(fetchedList));
+                    
+                    if (gameOver && frames > 0) {
+                        drawGameOverScreen(); 
+                    }
                 }
             })
             .catch(err => console.log("Cargando ranking inicial...", err));
