@@ -685,11 +685,25 @@
                 let playerName = prompt("¡Buen puntaje! Ingresa tu nombre para el ranking:", "Jugador");
                 if (playerName) {
                     playerName = playerName.trim().substring(0, 15);
+                    
+                    // Indicamos visualmente que se está enviando el puntaje
+                    ctx.fillStyle = '#ffff00';
+                    ctx.font = '16px Courier New';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Guardando puntaje...', canvas.width / 2, 210);
+
+                    // 1. Guardamos el puntaje y ESPERAMOS a que finalice la respuesta
                     fetch(`${RANKING_API_URL}?action=save&name=${encodeURIComponent(playerName)}&score=${Math.floor(score)}`)
-                        .then(() => fetch(RANKING_API_URL))
                         .then(res => res.json())
-                        .then(data => { topPlayers = data; })
-                        .catch(err => console.error("Error al actualizar ranking", err));
+                        .then(() => {
+                            // 2. Recién cuando se guardó con éxito, pedimos la lista actualizada
+                            return fetch(RANKING_API_URL);
+                        })
+                        .then(res => res.json())
+                        .then(data => { 
+                            topPlayers = data; // Actualiza la tabla automáticamente en pantalla
+                        })
+                        .catch(err => console.error("Error al guardar/actualizar ranking", err));
                 }
             }
 
