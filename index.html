@@ -790,13 +790,24 @@
 
     function handleActionA(e) {
         userWantsToPlay = true;
+        
+        if (audioElement) {
+            audioElement.play().then(() => {
+                isPlaying = true;
+                document.getElementById('play-icon').classList.add('playing');
+            }).catch(err => {
+                console.log("Audio esperando descarga completa:", err);
+            });
+        }
 
         if(e) e.preventDefault();
         
         if (isPaused) {
             resumeGame();
         } else if (gameOver) {
-            resetGame();
+            if (frames === 0) {
+                resetGame();
+            }
             return;
         } else {
             surfer.jump();
@@ -805,7 +816,15 @@
 
     function handleScreenClick(e) {
         userWantsToPlay = true;
-        startMusicLoop();
+        
+        if (audioElement) {
+            audioElement.play().then(() => {
+                isPlaying = true;
+                document.getElementById('play-icon').classList.add('playing');
+            }).catch(err => {
+                console.log("Audio esperando descarga completa:", err);
+            });
+        }
 
         if(e) e.preventDefault();
         
