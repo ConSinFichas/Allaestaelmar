@@ -130,7 +130,6 @@
             padding: 0 2px;
         }
 
-        /* --- D-PAD AMPLIADO 25% (132px) --- */
         .d-pad { position: relative; width: 132px; height: 132px; }
         .d-btn {
             position: absolute; background: rgba(0, 217, 255, 0.05);
@@ -143,7 +142,6 @@
         .d-right { top: 44px; right: 0; width: 44px; height: 44px; border-left: none; border-radius: 0 5px 5px 0; }
         .d-center { top: 44px; left: 44px; width: 44px; height: 44px; border: 1px solid #00d9ff; background: rgba(0, 217, 255, 0.15); }
 
-        /* --- BOTONES DE ACCIÓN A y B AMPLIADOS 25% (68px) CON SEPARACIÓN --- */
         .action-container { display: flex; gap: 16px; align-items: flex-end; }
         .action-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .action-btn {
@@ -524,7 +522,7 @@
         if (isPaused) return; 
 
         let currentTime = (audioElement && !audioElement.paused) ? audioElement.currentTime : 0;
-        let isSpecialEvent = currentTime >= 83 && currentTime <= 90;
+        let isSpecialEvent = currentTime >= 88 && currentTime <= 95;
 
         if (isSpecialEvent) {
             let bgFlash = Math.floor(frames / 12) % 2 === 0;
