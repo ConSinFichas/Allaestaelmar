@@ -247,7 +247,7 @@
                     drawScenery(0);
                     ctx.fillStyle = '#00d9ff';
                     ctx.font = 'bold 14px Courier New';
-                    ctx.fillText('Toca el Play, la pantalla o A para iniciar', 115, 115);
+                    ctx.fillText('Toca la pantalla o A para iniciar', 140, 115);
                     gameOver = true;
                     frames = 0;
                 });
@@ -653,18 +653,18 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             ctx.fillStyle = '#ff3366';
-            ctx.font = 'bold 24px Courier New';
+            ctx.font = 'bold 30px Courier New';
             ctx.textAlign = 'center';
-            ctx.fillText('GAME OVER', canvas.width / 2, 95);
+            ctx.fillText('GAME OVER', canvas.width / 2, 90);
             
             ctx.fillStyle = '#00d9ff';
-            ctx.font = '14px Courier New';
-            ctx.fillText(`SCORE FINAL: ${Math.floor(score)}`, canvas.width / 2, 135);
-            ctx.fillText(`🪙 MONEDAS: ${coinsCollected}`, canvas.width / 2, 160);
+            ctx.font = '16px Courier New';
+            ctx.fillText(`PUNTAJE FINAL: ${Math.floor(score)}`, canvas.width / 2, 135);
+            ctx.fillText(`🪙 FICHAS: ${coinsCollected}`, canvas.width / 2, 165);
             
-            ctx.font = '12px Courier New';
-            ctx.fillText('Toca la pantalla o A para reiniciar', canvas.width / 2, 205);
-            ctx.textAlign = 'left'; // reset text align
+            ctx.font = '13px Courier New';
+            ctx.fillText('Toca la pantalla para reiniciar', canvas.width / 2, 210);
+            ctx.textAlign = 'left';
             
             return; 
         }
@@ -701,14 +701,40 @@
         if (isPaused) {
             resumeGame();
         } else if (gameOver) {
+            if (frames === 0) {
+                resetGame();
+            }
+            return;
+        } else {
+            surfer.jump();
+        }
+    }
+
+    function handleScreenClick(e) {
+        userWantsToPlay = true;
+        
+        if (audioElement) {
+            audioElement.play().then(() => {
+                isPlaying = true;
+                document.getElementById('play-icon').classList.add('playing');
+            }).catch(err => {
+                console.log("Audio esperando descarga completa:", err);
+            });
+        }
+
+        if(e) e.preventDefault();
+        
+        if (isPaused) {
+            resumeGame();
+        } else if (gameOver) {
             resetGame();
         } else {
             surfer.jump();
         }
     }
 
-    document.getElementById('game-screen').addEventListener('mousedown', handleActionA);
-    document.getElementById('game-screen').addEventListener('touchstart', handleActionA, {passive: false});
+    document.getElementById('game-screen').addEventListener('mousedown', handleScreenClick);
+    document.getElementById('game-screen').addEventListener('touchstart', handleScreenClick, {passive: false});
 
     window.addEventListener('keydown', (e) => {
         if (e.code === 'Space' || e.code === 'ArrowUp') handleActionA(e);
