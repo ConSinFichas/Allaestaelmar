@@ -520,7 +520,7 @@
         if (isPaused) return; 
 
         let currentTime = (audioElement && !audioElement.paused) ? audioElement.currentTime : 0;
-        let isSpecialEvent = currentTime >= 84 && currentTime <= 90;
+        let isSpecialEvent = currentTime >= 83 && currentTime <= 90;
 
         if (isSpecialEvent) {
             let bgFlash = Math.floor(frames / 12) % 2 === 0;
