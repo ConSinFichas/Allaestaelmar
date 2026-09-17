@@ -805,7 +805,10 @@
         if (isPaused) {
             resumeGame();
         } else if (gameOver) {
-            resetGame();
+            if (frames === 0) {
+                resetGame();
+            }
+            return;
         } else {
             surfer.jump();
         }
