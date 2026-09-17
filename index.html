@@ -685,28 +685,49 @@
                 let playerName = prompt("¡Buen puntaje! Ingresa tu nombre para el ranking:", "Jugador");
                 if (playerName) {
                     playerName = playerName.trim().substring(0, 15);
-                    let finalScore = Math.floor(score);
-
-                    // 1. Truco visual: lo agregamos y ordenamos localmente al instante para que lo veas ya mismo
-                    topPlayers.push({ name: playerName, score: finalScore });
-                    topPlayers.sort((a, b) => b.score - a.score);
-                    topPlayers = topPlayers.slice(0, 5); // Nos quedamos con el top 5
-
-                    // 2. Guardamos en Google Sheets y esperamos 1 segundo antes de reconsultar
-                    fetch(`${RANKING_API_URL}?action=save&name=${encodeURIComponent(playerName)}&score=${finalScore}`)
-                        .then(() => {
-                            setTimeout(() => {
-                                fetch(RANKING_API_URL)
-                                    .then(res => res.json())
-                                    .then(data => { 
-                                        if (data && data.length > 0) topPlayers = data; 
-                                    })
-                                    .catch(err => console.error("Error al reconsultar ranking", err));
-                            }, 1000); // 1 segundo de cortesía para que Sheets guarde bien
-                        })
-                        .catch(err => console.error("Error al guardar ranking", err));
+                    fetch(`${RANKING_API_URL}?action=save&name=${encodeURIComponent(playerName)}&score=${Math.floor(score)}`)
+                        .then(() => fetch(RANKING_API_URL))
+                        .then(res => res.json())
+                        .then(data => { topPlayers = data; })
+                        .catch(err => console.error("Error al actualizar ranking", err));
                 }
             }
+
+            ctx.fillStyle = 'rgba(1, 6, 12, 0.95)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#ff3366';
+            ctx.font = 'bold 48px Courier New';
+            ctx.textAlign = 'center';
+            ctx.fillText('GAME OVER', canvas.width / 2, 65);
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = '22px Courier New';
+            ctx.fillText(`FINAL: ${Math.floor(score)}  |  🪙 FICHAS: ${coinsCollected}`, canvas.width / 2, 115);
+            
+            ctx.fillStyle = '#ff8c00';
+            ctx.font = 'bold 20px Courier New';
+            ctx.fillText('--- MEJORES PUNTAJES ---', canvas.width / 2, 160);
+            
+            ctx.font = '18px Courier New';
+            if (topPlayers.length === 0) {
+                ctx.fillStyle = 'rgba(0, 217, 255, 0.6)';
+                ctx.fillText('Conectando al ranking...', canvas.width / 2, 200);
+            } else {
+                topPlayers.forEach((p, index) => {
+                    let text = `${index + 1}. ${p.name.padEnd(10, ' ')} ${p.score}`;
+                    ctx.fillStyle = (index === 0) ? '#ffff00' : '#00d9ff';
+                    ctx.fillText(text, canvas.width / 2, 195 + (index * 30));
+                });
+            }
+            
+            ctx.fillStyle = '#00d9ff';
+            ctx.font = '20px Courier New';
+            ctx.fillText('Toca la pantalla para reiniciar', canvas.width / 2, 395);
+            ctx.textAlign = 'left';
+            
+            return; 
+        }
 
         frames++;
         score += (gameSpeed / 15); 
