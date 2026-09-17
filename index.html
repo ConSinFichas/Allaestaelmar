@@ -130,34 +130,33 @@
             padding: 0 2px;
         }
 
-        /* --- D-PAD AMPLIADO 50% (~158px) --- */
-        .d-pad { position: relative; width: 158px; height: 158px; }
+        /* --- D-PAD AMPLIADO 25% (132px) --- */
+        .d-pad { position: relative; width: 132px; height: 132px; }
         .d-btn {
             position: absolute; background: rgba(0, 217, 255, 0.05);
             border: 1px solid #00d9ff; display: flex; justify-content: center; align-items: center;
-            color: #00d9ff; font-size: 18px; box-shadow: 0 0 5px rgba(0, 217, 255, 0.2);
+            color: #00d9ff; font-size: 15px; box-shadow: 0 0 5px rgba(0, 217, 255, 0.2);
         }
-        .d-up { top: 0; left: 53px; width: 52px; height: 53px; border-bottom: none; border-radius: 6px 6px 0 0; }
-        .d-down { bottom: 0; left: 53px; width: 52px; height: 53px; border-top: none; border-radius: 0 0 6px 6px; }
-        .d-left { top: 53px; left: 0; width: 53px; height: 52px; border-right: none; border-radius: 6px 0 0 6px; }
-        .d-right { top: 53px; right: 0; width: 53px; height: 52px; border-left: none; border-radius: 0 6px 6px 6px; }
-        .d-center { top: 53px; left: 53px; width: 52px; height: 52px; border: 1px solid #00d9ff; background: rgba(0, 217, 255, 0.15); }
+        .d-up { top: 0; left: 44px; width: 44px; height: 44px; border-bottom: none; border-radius: 5px 5px 0 0; }
+        .d-down { bottom: 0; left: 44px; width: 44px; height: 44px; border-top: none; border-radius: 0 0 5px 5px; }
+        .d-left { top: 44px; left: 0; width: 44px; height: 44px; border-right: none; border-radius: 5px 0 0 5px; }
+        .d-right { top: 44px; right: 0; width: 44px; height: 44px; border-left: none; border-radius: 0 5px 5px 0; }
+        .d-center { top: 44px; left: 44px; width: 44px; height: 44px; border: 1px solid #00d9ff; background: rgba(0, 217, 255, 0.15); }
 
-        /* --- BOTONES DE ACCIÓN A y B AMPLIADOS 50% (82px) y SUPERPUESTOS --- */
-        .action-container { display: flex; gap: 6px; align-items: flex-end; }
+        /* --- BOTONES DE ACCIÓN A y B AMPLIADOS 25% (68px) Y LIGERAMENTE SOLAPADOS --- */
+        .action-container { display: flex; gap: 8px; align-items: flex-end; }
         .action-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
         .action-btn {
-            width: 82px; height: 82px; border-radius: 50%;
+            width: 68px; height: 68px; border-radius: 50%;
             border: 2px solid #00d9ff; background: rgba(0, 217, 255, 0.08);
-            color: #00d9ff; font-size: 26px; font-weight: bold; display: flex;
+            color: #00d9ff; font-size: 22px; font-weight: bold; display: flex;
             justify-content: center; align-items: center; cursor: pointer;
             box-shadow: 0 0 10px rgba(0, 217, 255, 0.3); transition: background 0.1s;
         }
         .action-btn:active { background: rgba(0, 217, 255, 0.3); box-shadow: 0 0 15px rgba(0, 217, 255, 0.6); }
         .action-label { font-size: 9px; letter-spacing: 1px; color: #00d9ff; }
         
-        /* B corrido hacia la izquierda (centro) y elevado para solaparse estéticamente */
-        #group-b { margin-bottom: 38px; margin-right: -24px; z-index: 2; }
+        #group-b { margin-bottom: 24px; margin-right: -16px; z-index: 2; }
 
         .footer-shortcuts {
             display: flex; justify-content: space-between; font-size: 8px;
