@@ -344,7 +344,7 @@
     const surfer = {
         x: 80,
         y: 328,
-        normalWidth: 60,
+        Width: 60,
         normalHeight: 72,
         duckWidth: 45,
         duckHeight: 54,
@@ -370,7 +370,6 @@
 
         draw: function() {
             ctx.save();
-            let currentW = this.isDucking ? this.duckWidth : this.normalWidth;
             let currentH = this.isDucking ? this.duckHeight : this.normalHeight;
 
             if (images.surfer && images.surfer.complete && images.surfer.naturalWidth > 0) {
@@ -391,8 +390,8 @@
         },
 
         duck: function(state) {
-            if (state && !this.isGrounded) {
-                this.vy += 15; 
+            if (state && !this.isGrounded && this.vy < 12) {
+            this.vy = 12;
             }
             if (this.isGrounded) {
                 this.isDucking = state;
@@ -667,6 +666,8 @@
     document.getElementById('game-screen').addEventListener('touchstart', handleActionA, {passive: false});
 
     window.addEventListener('keydown', (e) => {
+	if (e.repeat) return;
+
         if (e.code === 'Space' || e.code === 'ArrowUp') handleActionA(e);
         if (e.code === 'ArrowDown' || e.code === 'KeyB' || e.code === 'KeyS') {
             if(!gameOver && !isPaused) surfer.duck(true);
