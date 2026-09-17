@@ -790,16 +790,13 @@
 
     function handleActionA(e) {
         userWantsToPlay = true;
-        startMusicLoop();
 
         if(e) e.preventDefault();
         
         if (isPaused) {
             resumeGame();
         } else if (gameOver) {
-            if (frames === 0) {
-                resetGame();
-            }
+            resetGame();
             return;
         } else {
             surfer.jump();
