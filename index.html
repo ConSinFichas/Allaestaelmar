@@ -227,7 +227,12 @@
     function fetchRanking() {
         fetch(RANKING_API_URL)
             .then(res => res.json())
-            .then(data => { topPlayers = data; })
+            .then(data => { 
+                topPlayers = data || []; 
+                if (gameOver && frames > 0) {
+                    drawGameOverScreen();
+                }
+            })
             .catch(err => console.log("Cargando ranking inicial...", err));
     }
 
