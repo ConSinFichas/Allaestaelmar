@@ -213,6 +213,10 @@
 </div>
 
 <script>
+    const RANKING_API_URL = 'https://script.google.com/macros/s/AKfycbyYKNTc021pcZQ4HyKTFhsV4jG-U3tbSpiNGeCtUpu59hEpNqCwkQfnvBiVZKhWY7UhOg/exec';
+    let topPlayers = [];
+    let scoreSaved = false;
+
     let gameConfig = {};
     let audioElement = null;
     let musicInterval;
@@ -220,7 +224,15 @@
     let trackProgressPercent = 0;
     const images = {};
 
+    function fetchRanking() {
+        fetch(RANKING_API_URL)
+            .then(res => res.json())
+            .then(data => { topPlayers = data; })
+            .catch(err => console.log("Cargando ranking inicial...", err));
+    }
+
     function loadConfigAndAssets() {
+        fetchRanking();
         fetch('config.json?v=' + Date.now())
             .then(res => res.json())
             .then(config => {
@@ -457,6 +469,7 @@
         coins = [];
         score = 0;
         coinsCollected = 0;
+        scoreSaved = false;
         nextSpeedUpThreshold = 250;
         gameSpeed = 4.5;
         if (gameConfig.audio) {
@@ -649,21 +662,51 @@
 
         if (gameOver) {
             if (score > hiScore) hiScore = Math.floor(score);
-            ctx.fillStyle = 'rgba(1, 6, 12, 0.85)';
+            
+            if (!scoreSaved && score > 0) {
+                scoreSaved = true;
+                let playerName = prompt("¡Buen puntaje! Ingresa tu nombre para el ranking:", "Jugador");
+                if (playerName) {
+                    playerName = playerName.trim().substring(0, 15);
+                    fetch(`${RANKING_API_URL}?action=save&name=${encodeURIComponent(playerName)}&score=${Math.floor(score)}`)
+                        .then(() => fetch(RANKING_API_URL))
+                        .then(res => res.json())
+                        .then(data => { topPlayers = data; })
+                        .catch(err => console.error("Error al actualizar ranking", err));
+                }
+            }
+
+            ctx.fillStyle = 'rgba(1, 6, 12, 0.9)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
             ctx.fillStyle = '#ff3366';
             ctx.font = 'bold 30px Courier New';
             ctx.textAlign = 'center';
-            ctx.fillText('GAME OVER', canvas.width / 2, 90);
+            ctx.fillText('GAME OVER', canvas.width / 2, 50);
             
             ctx.fillStyle = '#00d9ff';
-            ctx.font = '16px Courier New';
-            ctx.fillText(`PUNTAJE FINAL: ${Math.floor(score)}`, canvas.width / 2, 135);
-            ctx.fillText(`🪙 FICHAS: ${coinsCollected}`, canvas.width / 2, 165);
+            ctx.font = '14px Courier New';
+            ctx.fillText(`PUNTAJE FINAL: ${Math.floor(score)}  |  🪙 FICHAS: ${coinsCollected}`, canvas.width / 2, 78);
             
+            ctx.fillStyle = '#ff8c00';
+            ctx.font = 'bold 12px Courier New';
+            ctx.fillText('--- MEJORES PUNTAJES ---', canvas.width / 2, 105);
+            
+            ctx.font = '11px Courier New';
+            if (topPlayers.length === 0) {
+                ctx.fillStyle = 'rgba(0, 217, 255, 0.6)';
+                ctx.fillText('Cargando ranking...', canvas.width / 2, 125);
+            } else {
+                topPlayers.forEach((p, index) => {
+                    let text = `${index + 1}. ${p.name.padEnd(12, ' ')} ${p.score}`;
+                    ctx.fillStyle = (index === 0) ? '#ffff00' : '#00d9ff';
+                    ctx.fillText(text, canvas.width / 2, 122 + (index * 16));
+                });
+            }
+            
+            ctx.fillStyle = '#00d9ff';
             ctx.font = '13px Courier New';
-            ctx.fillText('Toca la pantalla para reiniciar', canvas.width / 2, 210);
+            ctx.fillText('Toca la pantalla para reiniciar', canvas.width / 2, 220);
             ctx.textAlign = 'left';
             
             return; 
