@@ -492,10 +492,10 @@
         let moonAlpha = 1.0;
         if (currentTime >= 42 && currentTime < 43) {
             moonAlpha = 1.0 - (currentTime - 42);
-        } else if (currentTime >= 43 && currentTime <= 49) {
+        } else if (currentTime >= 43 && currentTime <= 53) {
             moonAlpha = 0.0;
-        } else if (currentTime > 49 && currentTime <= 50) {
-            moonAlpha = currentTime - 49;
+        } else if (currentTime > 53 && currentTime <= 54) {
+            moonAlpha = currentTime - 53;
         }
 
         if (moonAlpha > 0) {
@@ -682,7 +682,7 @@
             
             if (!scoreSaved && score > 0) {
                 scoreSaved = true;
-                let playerName = prompt("¡Buen puntaje! Ingresa tu nombre para el ranking:", "Jugador");
+                let playerName = prompt("¡Buen puntaje! Ingresa tu nombre:", "Nombre");
                 if (playerName) {
                     playerName = playerName.trim().substring(0, 15);
                     let finalScore = Math.floor(score);
