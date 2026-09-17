@@ -258,7 +258,7 @@
                     surfer.draw();
                     drawScenery(0);
                     ctx.fillStyle = '#00d9ff';
-                    ctx.font = 'bold 22px Courier New';
+                    ctx.font = 'bold 18px Courier New';
                     ctx.fillText('Toca la pantalla o A para iniciar', 65, 120);
                     gameOver = true;
                     frames = 0;
@@ -531,12 +531,14 @@
         ctx.moveTo(0, 400); ctx.lineTo(canvas.width, 400);
         ctx.stroke();
 
-        // Puntuación superior más grande
+        ctx.save();
         ctx.fillStyle = '#00d9ff';
         ctx.font = 'bold 24px Courier New';
+        ctx.textAlign = 'center';
         let hiStr = String(Math.floor(hiScore)).padStart(5, '0');
         let scoreStr = String(Math.floor(score)).padStart(5, '0');
-        ctx.fillText(`HI ${hiStr}  SC ${scoreStr}  🪙 ${coinsCollected}`, 55, 38);
+        ctx.fillText(`HI ${hiStr}    SC ${scoreStr}    🪙 ${fichasCount}`, canvas.width / 2, 35);
+        ctx.restore();
     }
 
     function drawPauseScreen() {
