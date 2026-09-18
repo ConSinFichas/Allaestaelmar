@@ -698,6 +698,33 @@
                     });
             }
             
+            if (gameOver) {
+            if (score > hiScore) hiScore = Math.floor(score);
+            
+            // Carga inicial si el ranking está vacío
+            if (topPlayers.length === 0 && !window.fetchingRanking) {
+                window.fetchingRanking = true;
+                fetch(RANKING_API_URL)
+                    .then(res => res.json())
+                    .then(data => { 
+                        let fetchedList = [];
+                        if (Array.isArray(data)) {
+                            fetchedList = data;
+                        } else if (data && Array.isArray(data.ranking)) {
+                            fetchedList = data.ranking;
+                        } else if (data && Array.isArray(data.players)) {
+                            fetchedList = data.players;
+                        }
+                        topPlayers = fetchedList;
+                        window.fetchingRanking = false;
+                    })
+                    .catch(err => {
+                        console.error("Error al cargar ranking", err);
+                        window.fetchingRanking = false;
+                    });
+            }
+            
+            // Guardar puntaje al terminar la partida
             if (!scoreSaved && score > 0) {
                 scoreSaved = true;
                 let playerName = prompt("¡Buen puntaje! Ingresa tu nombre:", "Nombre");
@@ -705,11 +732,13 @@
                     playerName = playerName.trim().substring(0, 15);
                     let finalScore = Math.floor(score);
 
+                    // Actualización local inmediata para fluidez visual
                     topPlayers.push({ name: playerName, score: finalScore });
                     topPlayers.sort((a, b) => b.score - a.score);
                     topPlayers = topPlayers.slice(0, 5); 
                     drawGameOverScreen(); 
 
+                    // Envío a Google Sheets
                     fetch(`${RANKING_API_URL}?action=save&name=${encodeURIComponent(playerName)}&score=${finalScore}`)
                         .then(() => {
                             setTimeout(() => {
@@ -736,6 +765,7 @@
                         .catch(err => console.error("Error al guardar ranking", err));
                 }
             }
+        }
 
             ctx.fillStyle = 'rgba(1, 6, 12, 0.95)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
