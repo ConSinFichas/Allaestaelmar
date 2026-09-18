@@ -732,39 +732,21 @@
                     playerName = playerName.trim().substring(0, 15);
                     let finalScore = Math.floor(score);
 
-                    // Actualización local inmediata para fluidez visual
+                    // Actualización local inmediata
                     topPlayers.push({ name: playerName, score: finalScore });
                     topPlayers.sort((a, b) => b.score - a.score);
                     topPlayers = topPlayers.slice(0, 5); 
-                    drawGameOverScreen(); 
 
                     // Envío a Google Sheets
                     fetch(`${RANKING_API_URL}?action=save&name=${encodeURIComponent(playerName)}&score=${finalScore}`)
-                        .then(() => {
-                            setTimeout(() => {
-                                fetch(RANKING_API_URL)
-                                    .then(res => res.json())
-                                    .then(data => { 
-                                        let fetchedList = [];
-                                        if (Array.isArray(data)) {
-                                            fetchedList = data;
-                                        } else if (data && Array.isArray(data.ranking)) {
-                                            fetchedList = data.ranking;
-                                        } else if (data && Array.isArray(data.players)) {
-                                            fetchedList = data.players;
-                                        }
-
-                                        if (fetchedList.length > 0) {
-                                            topPlayers = fetchedList; 
-                                            if (gameOver) drawGameOverScreen();
-                                        }
-                                    })
-                                    .catch(err => console.error("Error al sincronizar ranking", err));
-                            }, 1500);
-                        })
+                        .then(res => res.json())
                         .catch(err => console.error("Error al guardar ranking", err));
                 }
             }
+
+            // --- ESTO FALTABA: Dibuja la pantalla y congela el loop del juego correctamente ---
+            drawGameOverScreen();
+            return;
         }
 
             ctx.fillStyle = 'rgba(1, 6, 12, 0.95)';
